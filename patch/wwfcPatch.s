@@ -13,9 +13,9 @@
 #ifndef WWFC_DOMAIN
 
 #  ifdef PROD
-#    define WWFC_DOMAIN "zplwii.xyz"
+#    define WWFC_DOMAIN "wiilink24.com"
 #  else
-#    define WWFC_DOMAIN "zplwii.xyz" // Points to localhost
+#    define WWFC_DOMAIN "nwfc.wiinoma.com" // Points to localhost
 #  endif
 
 #endif
@@ -91,6 +91,8 @@ GCT_STRING(ADDRESS_DWC_AUTH_ADD_CSNUM, AuthStage0Code) // 0x800EE098
     // Mario Strikers Charged works the same way as Mario Sports Mix
 #if R4QKD00
     /* 0x04 */ lwz     r3, -0x1B90(r13) # HBM data (-0x4)
+#elif R4QPD01 | R4QPD02
+    /* 0x04 */ lwz     r3, -0x1B08(r13) # HBM data (-0x4)
 #else
     /* 0x04 */ lwz     r3, -0x1AE8(r13) # HBM data (-0x4)
 #endif
@@ -129,6 +131,20 @@ GCT_STRING(ADDRESS_DWC_AUTH_ADD_CSNUM, AuthStage0Code) // 0x800EE098
     // Adjust offsets from this point:
     // 0x0C -> 0x24
     // 0x58 -> 0x70
+#elif ADDRESS_BMST_RSO_LOCATOR
+    /* 0x04 */ HD(GCT_STRING_PTR, r31, LD_Stage1ParamBlock)
+
+    // Fortune Street uses an RSO for HBM, so we use this random pointer to try and find it
+    // This is hacky but it saves on memory
+    /* 0x0C */ lis     r3, ADDRESS_BMST_RSO_LOCATOR@ha
+    /* 0x10 */ lwz     r3, ADDRESS_BMST_RSO_LOCATOR@l(r3)
+    /* 0x14 */ addis   r3, r3, 0x2D49C@ha
+    /* 0x18 */ addi    r3, r3, 0x2D49C@l
+    /* 0x1C */ stw     r3, LD_Stage1ParamAllocator - LD_Stage1ParamBlock(r31)
+
+    // Adjust offsets from this point:
+    // 0x0C -> 0x20
+    // 0x58 -> 0x6C
 #else
     // Normal routine, executed if the HBM allocator is used
     /* 0x04 */ HD(GCT_STRING_PTR, r31, LD_Stage1ParamBlock)
@@ -220,6 +236,7 @@ LD_Stage1ParamBlock:
     /* 0x2C */ .long   ADDRESS_NHTTPCreateRequest // NHTTPCreateRequest (0x801D8FF8)
     /* 0x30 */ .long   ADDRESS_NHTTPSendRequestAsync // NHTTPSendRequestAsync (0x801D925C)
     /* 0x34 */ .long   ADDRESS_NHTTPDestroyResponse // NHTTPDestroyResponse (0x801D92F8)
+LD_Stage1ParamAllocator:
 #if WUNEN0005 || WUNJN0002 || WUNPN0002
     /* 0x38 */ .long   ADDRESS_DWC_AUTH_ADD_CSNUM + (L_CustomAllocator - AuthStage0Code) // allocator (custom)
 #else

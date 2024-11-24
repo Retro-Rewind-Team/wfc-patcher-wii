@@ -1,4 +1,3 @@
-#include "import/mkw/net/itemHandler.hpp"
 #include "import/mkw/net/selectHandler.hpp"
 #include "import/mkw/net/userHandler.hpp"
 #include "import/mkw/ui/page/friendRoomPage.hpp"
@@ -12,6 +11,7 @@ namespace mkw::Net
 
 #if RMC
 
+u32 NetController::s_reportedAids = 0x00000000;
 u32 SelectHandler::s_kickTimerFrames = 0;
 
 #endif
@@ -28,6 +28,75 @@ MenuInputManager::Handler<OpenHostPage>* OpenHostPage::s_onOption = nullptr;
 YesNoPage::Handler<OpenHostPage>* OpenHostPage::s_onYesOrNo = nullptr;
 bool OpenHostPage::s_openHostEnabled = false;
 bool OpenHostPage::s_sentOpenHostValue = false;
+const wchar_t* OpenHostPage::s_openHostPromptMessages[RVL::SCLanguageCount] = {
+    L"こうかいホストをゆうこうにしますか？\n"
+    L"\n"
+    L"この機能はあなたのフレンドコードを\n"
+    L"追加したプレイヤーはあなたが追加し返さなくても\n"
+    L"フレンドとしてあなたと会えるようになる機能です",
+    L"Enable Open Host?\n"
+    L"\n"
+    L"This feature allows players who\n"
+    L"add your friend code to meet up with you,\n"
+    L"even if you don't add them back.",
+    nullptr,
+    L"Activer l'Open Host?\n"
+    L"\n"
+    L"Cette fonctionnalité permet aux joueurs qui\n"
+    L"ajoutent votre code ami de vous rejoindre,\n"
+    L"même si vous ne les avez pas ajoutés.",
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+};
+const wchar_t* OpenHostPage::s_connectionLostMessages[RVL::SCLanguageCount] = {
+    L"サーバーからの接続が切断されました\n"
+    L"\n"
+    L"もう一度やり直してください",
+    L"You have lost connection to\n"
+    L"the server.\n"
+    L"\n"
+    L"Please try again later.",
+    nullptr,
+    L"Vous avez perdu la connexion\n"
+    L"au serveur.\n"
+    L"\n"
+    L"Veuillez réessayer ultérieurement.",
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+};
+const wchar_t* OpenHostPage::s_openHostEnabledMessages[RVL::SCLanguageCount] = {
+    L"こうかいホストをゆうこうにしました！",
+    L"Open Host is now enabled!",
+    nullptr,
+    L"Open Host est maintenant activé!",
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+};
+const wchar_t* OpenHostPage::s_openHostDisabledMessages[RVL::SCLanguageCount] =
+    {
+        L"こうかいホストをむこうにしました！",
+        L"Open Host is now disabled!",
+        nullptr,
+        L"Open Host est maintenant désactivé!",
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+};
 
 const wchar_t* WifiMenuPage::s_messageOfTheDay =
     L"Welcome to\nWiiLink Wi-Fi Connection!";
@@ -124,7 +193,7 @@ WWFC_DEFINE_PATCH = {
 // Allow users to open rooms without having any friends added
 WWFC_DEFINE_PATCH = {
     Patch::CallWithCTR( //
-        WWFC_PATCH_LEVEL_SUPPORT, //
+        WWFC_PATCH_LEVEL_FEATURE, //
         RMCXD_PORT(0x8064D358, 0x8061A044, 0x8064C9C4, 0x8063B670), //
         // clang-format off
         [](mkw::UI::WifiFriendMenuPage* /* wifiFriendMenuPage */, void* /* pushButton */) -> int {
@@ -158,6 +227,33 @@ WWFC_DEFINE_PATCH = {
     ),
 };
 
+extern "C" {
+__attribute__((__used__)) static void ClearReportedAid(u8 playerAid)
+{
+    mkw::Net::NetController::ClearReportedAid(playerAid);
+}
+}
+
+// Clear the flag that indicates whether an aid was reported to the server
+// when closing the connection to them.
+WWFC_DEFINE_PATCH = {
+    Patch::BranchWithCTR( //
+        WWFC_PATCH_LEVEL_FEATURE, //
+        RMCXD_PORT(0x806588C8, 0x80654440, 0x80657F34, 0x80646BE0), //
+        ASM_LAMBDA(
+            // clang-format off
+            mr        r3, r28;
+
+            lwz       r28, 0x10(r1);
+            mtlr      r0;
+            addi      r1, r1, 0x20;
+
+            b         ClearReportedAid;
+            // clang-format on
+        )
+    ),
+};
+
 // Reset the timer that is used to detect if clients are stalling the room
 WWFC_DEFINE_PATCH = {
     Patch::CallWithCTR( //
@@ -184,42 +280,42 @@ WWFC_DEFINE_PATCH = {
 // Allow the "Open Host" feature to be enabled via the press of a button
 WWFC_DEFINE_PATCH = {
     Patch::WritePointer(
-        WWFC_PATCH_LEVEL_SUPPORT,
+        WWFC_PATCH_LEVEL_FEATURE,
         RMCXD_PORT(0x808B9008, 0x808BABF8, 0x808B8158, 0x808A7470), //
         FriendRoomPage_onActivate
     ),
 };
 WWFC_DEFINE_PATCH = {
     Patch::WritePointer(
-        WWFC_PATCH_LEVEL_SUPPORT,
+        WWFC_PATCH_LEVEL_FEATURE,
         RMCXD_PORT(0x808B900C, 0x808BABFC, 0x808B815C, 0x808A7474), //
         FriendRoomPage_onDeactivate
     ),
 };
 WWFC_DEFINE_PATCH = {
     Patch::WritePointer(
-        WWFC_PATCH_LEVEL_SUPPORT,
+        WWFC_PATCH_LEVEL_FEATURE,
         RMCXD_PORT(0x808B902C, 0x808BAC1C, 0x808B817C, 0x808A7494), //
         FriendRoomPage_onRefocus
     ),
 };
 WWFC_DEFINE_PATCH = {
     Patch::WritePointer(
-        WWFC_PATCH_LEVEL_SUPPORT,
+        WWFC_PATCH_LEVEL_FEATURE,
         RMCXD_PORT(0x808BFE7C, 0x808B97CC, 0x808BEFCC, 0x808AE2EC), //
         WifiFriendMenu_onActivate
     ),
 };
 WWFC_DEFINE_PATCH = {
     Patch::WritePointer(
-        WWFC_PATCH_LEVEL_SUPPORT,
+        WWFC_PATCH_LEVEL_FEATURE,
         RMCXD_PORT(0x808BFE80, 0x808B97D0, 0x808BEFD0, 0x808AE2F0), //
         WifiFriendMenu_onDeactivate
     ),
 };
 WWFC_DEFINE_PATCH = {
     Patch::WritePointer(
-        WWFC_PATCH_LEVEL_SUPPORT,
+        WWFC_PATCH_LEVEL_FEATURE,
         RMCXD_PORT(0x808BFEA0, 0x808B97F0, 0x808BEFF0, 0x808AE310), //
         WifiFriendMenu_onRefocus
     ),

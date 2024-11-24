@@ -80,6 +80,20 @@ def parse_file(file_path, title_name):
         exit('missing OSGetTime :( ' + title_name)
     ADDRESS_OSGetTime = dol_to_real(hdr, index)
 
+    # OSDisableInterrupts
+    # 7C 60 00 A6 54 64 04 5E 7C 80 01 24 54 63 8F FE 4E 80 00 20
+    index = dol.find(b'\x7C\x60\x00\xA6\x54\x64\x04\x5E\x7C\x80\x01\x24\x54\x63\x8F\xFE\x4E\x80\x00\x20')
+    if index == -1:
+        exit('missing OSDisableInterrupts :( ' + title_name)
+    ADDRESS_OSDisableInterrupts = dol_to_real(hdr, index)
+
+    # OSRestoreInterrupts
+    # 2C 03 00 00 7C 80 00 A6 41 82 00 0C 60 85 80 00 48 00 00 08 54 85 04 5E 7C A0 01 24 54 83 8F FE 4E 80 00 20
+    index = dol.find(b'\x2C\x03\x00\x00\x7C\x80\x00\xA6\x41\x82\x00\x0C\x60\x85\x80\x00\x48\x00\x00\x08\x54\x85\x04\x5E\x7C\xA0\x01\x24\x54\x83\x8F\xFE\x4E\x80\x00\x20')
+    if index == -1:
+        exit('missing OSRestoreInterrupts :( ' + title_name)
+    ADDRESS_OSRestoreInterrupts = dol_to_real(hdr, index)
+
     index = dol.find('https://naswii.nintendowifi.net/ac'.encode('ascii'))
     if index == -1:
         exit('missing naswii url :( ' + title_name)
@@ -467,14 +481,18 @@ def parse_file(file_path, title_name):
     else:
         exit('NO AUTH RESPONSE COMPATIBILITY ' + version)
 
+    ADDRESS_BMST_RSO_LOCATOR = 0
     ADDRESS_GH_ALLOC_FUNCTION = 0
     ADDRESS_PES_ALLOC_FUNCTION = 0
     ADDRESS_HBM_ALLOCATOR = 0
     # --- FIND HBM ALLOCATOR
     # Fortune Street uses an RSO
-    # I don't like this because it's a dynamic memory address, but it's fine?
-    if title_name == 'ST7ED00' or title_name == 'ST7JD00' or title_name == 'ST7PD00':
-        ADDRESS_HBM_ALLOCATOR = 0x81634B3C
+    if title_name == 'ST7ED00':
+        ADDRESS_BMST_RSO_LOCATOR = 0x8054CB0C
+    elif title_name == 'ST7JD00':
+        ADDRESS_BMST_RSO_LOCATOR = 0x8054CA0C
+    elif title_name == 'ST7PD00':
+        ADDRESS_BMST_RSO_LOCATOR = 0x8054CD0C
     # Battalion Wars uses an RSO loaded _in MEM2_, but it's luckily always in the same location
     elif title_name == 'RBWJD00' or title_name == 'RBWED00':
         ADDRESS_HBM_ALLOCATOR = 0x903FE054
@@ -1337,6 +1355,21 @@ def parse_file(file_path, title_name):
     d = real_to_dol(hdr, ADDRESS_DWC_AUTH_ADD_CSNUM)
     ADDRESS_SCGetProductSN = decode_bl(dol, d+0x14)
 
+    ADDRESS_ESP_FD = 0
+    if dol.find(b'/dev/es') != -1:
+        # find ES fd with ESP_LaunchTitle
+        # 90 0C 00 04 38 E1 00 F0 39 41 00 20 81 2D
+        index = dol.find(b'\x90\x0C\x00\x04\x38\xE1\x00\xF0\x39\x41\x00\x20\x81\x2D')
+        if index == -1:
+            # 90 0C 00 04 38 E1 00 F0 39 21 00 20 80 CD
+            index = dol.find(b'\x90\x0C\x00\x04\x38\xE1\x00\xF0\x39\x21\x00\x20\x80\xCD')
+
+        if index != -1:
+            offset = struct.unpack('>H', dol[index+0xE:index+0x10])[0]
+            if offset & 0x8000:
+                offset -= 0x10000
+            ADDRESS_ESP_FD = ADDRESS_R13_BASE + offset
+
 
     def fmthex(v):
         return "0x{:08X}".format(v)
@@ -1346,6 +1379,8 @@ def parse_file(file_path, title_name):
         "ADDRESS_MD5Digest":                 fmthex(ADDRESS_MD5Digest),
         "ADDRESS_strcmp":                    fmthex(ADDRESS_strcmp),
         "ADDRESS_OSGetTime":                 fmthex(ADDRESS_OSGetTime),
+        "ADDRESS_OSDisableInterrupts":       fmthex(ADDRESS_OSDisableInterrupts),
+        "ADDRESS_OSRestoreInterrupts":       fmthex(ADDRESS_OSRestoreInterrupts),
         "ADDRESS_DCFlushRange":              fmthex(ADDRESS_DCFlushRange),
         "ADDRESS_ICInvalidateRange":         fmthex(ADDRESS_ICInvalidateRange),
         "ADDRESS_IOS_Open":                  fmthex(ADDRESS_IOS_Open),
@@ -1377,6 +1412,7 @@ def parse_file(file_path, title_name):
         "ADDRESS_DWCi_SetError":             fmthex(ADDRESS_DWCi_SetError),
         "ADDRESS_DWCi_HandleGPError":        fmthex(ADDRESS_DWCi_HandleGPError),
         "ADDRESS_HBM_ALLOCATOR":             fmthex(ADDRESS_HBM_ALLOCATOR),
+        "ADDRESS_BMST_RSO_LOCATOR":          fmthex(ADDRESS_BMST_RSO_LOCATOR),
         "ADDRESS_GH_ALLOC_FUNCTION":         fmthex(ADDRESS_GH_ALLOC_FUNCTION),
         "ADDRESS_PES_ALLOC_FUNCTION":        fmthex(ADDRESS_PES_ALLOC_FUNCTION),
         "ADDRESS_SSBB_GET_HEAP_FUNCTION":    fmthex(ADDRESS_SSBB_GET_HEAP_FUNCTION),
@@ -1432,6 +1468,7 @@ def parse_file(file_path, title_name):
         "ADDRESS_gt2AddressToString":        fmthex(ADDRESS_gt2AddressToString),
         "ADDRESS_gt2CreateSocket":           fmthex(ADDRESS_gt2CreateSocket),
         "ADDRESS_SCGetProductSN":            fmthex(ADDRESS_SCGetProductSN),
+        "ADDRESS_ESP_FD":                    fmthex(ADDRESS_ESP_FD),
     }
 
     games.append(game)
@@ -1448,6 +1485,8 @@ if __name__ == '__main__':
         "ADDRESS_MD5Digest",
         "ADDRESS_strcmp",
         "ADDRESS_OSGetTime",
+        "ADDRESS_OSDisableInterrupts",
+        "ADDRESS_OSRestoreInterrupts",
         "ADDRESS_DCFlushRange",
         "ADDRESS_ICInvalidateRange",
         "ADDRESS_IOS_Open",
@@ -1479,6 +1518,7 @@ if __name__ == '__main__':
         "ADDRESS_DWCi_SetError",
         "ADDRESS_DWCi_HandleGPError",
         "ADDRESS_HBM_ALLOCATOR",
+        "ADDRESS_BMST_RSO_LOCATOR",
         "ADDRESS_GH_ALLOC_FUNCTION",
         "ADDRESS_PES_ALLOC_FUNCTION",
         "ADDRESS_SSBB_GET_HEAP_FUNCTION",
@@ -1534,6 +1574,7 @@ if __name__ == '__main__':
         "ADDRESS_gt2AddressToString",
         "ADDRESS_gt2CreateSocket",
         "ADDRESS_SCGetProductSN",
+        "ADDRESS_ESP_FD",
     ]
 
     with open('gamedefs.csv', 'w', newline='') as csvfile:

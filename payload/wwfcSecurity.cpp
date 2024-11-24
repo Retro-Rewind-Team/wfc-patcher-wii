@@ -5,7 +5,9 @@
 #include "import/mkw/net/selectHandler.hpp"
 #include "import/mkw/net/userHandler.hpp"
 #include "import/mkw/registry.hpp"
+#include "import/mkw/system/raceConfig.hpp"
 #include "import/mkw/system/system.hpp"
+#include "wwfcLog.hpp"
 #include "wwfcPatch.hpp"
 
 namespace wwfc::Security
@@ -236,6 +238,7 @@ static bool IsHeaderPacketDataValid(
     const void* /* packet */, u8 /* packetSize */, u8 /* playerAid */
 )
 {
+    // This packet is validated by the function 'IsRacePacketValid'
     return true;
 }
 
@@ -277,21 +280,6 @@ static bool IsMatchHeaderPacketDataValid(
             }
         } else /* if (scenario->isOnlineBattle()) */ {
             if (!IsCombinationValidBT(character, vehicle)) {
-                return false;
-            }
-        }
-    }
-
-    MatchHeaderHandler::Packet::Course currentCourse =
-        matchHeaderPacket->course;
-    if (currentCourse != MatchHeaderHandler::Packet::Course::None) {
-        Course course = static_cast<Course>(currentCourse);
-        if (scenario->isOnlineVersusRace()) {
-            if (!IsRaceCourse(course)) {
-                return false;
-            }
-        } else /* if (scenario->isOnlineBattle()) */ {
-            if (!IsBattleCourse(course)) {
                 return false;
             }
         }
@@ -495,9 +483,8 @@ IsItemPacketDataValid(const void* packet, u8 packetSize, u8 /* playerAid */)
     return true;
 }
 
-static bool IsEventPacketDataValid(
-    const void* packet, u8 packetSize, u8 /* playerAid */
-)
+static bool
+IsEventPacketDataValid(const void* packet, u8 packetSize, u8 playerAid)
 {
     using namespace mkw::System;
 
@@ -513,15 +500,15 @@ static bool IsEventPacketDataValid(
     // Always ensure that the packet does not contain any invalid item
     // objects, as this can cause a buffer overflow to occur.
     if (eventPacket->containsInvalidItemObject()) {
-        return true;
+        return false;
     }
 
     if (!NetController::Instance()->inVanillaMatch()) {
         return true;
     }
 
-    if (!eventPacket->isValid(packetSize)) {
-        return true;
+    if (!eventPacket->isValid(packetSize, playerAid)) {
+        return false;
     }
 
     return true;

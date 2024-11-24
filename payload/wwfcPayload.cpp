@@ -1,4 +1,3 @@
-#include "import/egg/exception.hpp"
 #include "wwfcLogin.hpp"
 #include "wwfcPatch.hpp"
 #include "wwfcSupport.hpp"
@@ -115,8 +114,8 @@ static void CallCtors(const wwfc_payload* const payload)
             continue;
         }
 
-        ctor = (decltype(ctor)
-        ) (reinterpret_cast<const char*>(payload) + ctorOffset);
+        ctor = (decltype(ctor)) (reinterpret_cast<const char*>(payload) +
+                                 ctorOffset);
         (*ctor)();
     }
 }
@@ -143,20 +142,18 @@ s32 EntryAfterGOT(wwfc_payload* payload)
 #  endif
 #endif
 
-    EGG::Exception::SetUserCallBack(nullptr);
-
-// "Anticheat"
-// Check for the presence of the gecko codehandler, and halt online connections if it is found
-if (*(u32 *)0x80001920 != 0x0)
+    // "Anticheat"
+    // Check for the presence of the gecko codehandler, and halt online connections if it is found
+if (*(u32 *)0x80001920 != 0x0 && *(u32 *)0x80001920 != 0x3C6000D0)
 {
     if (*(u32 *)0x80001920 != 0xFEE00090 && *(u32 *)0x80001920 != 0x3C841000)
     {
         return WL_ERROR_PAYLOAD_STAGE1_WAITING;
     }
-}
 if (*(u32 *)0x802588F8 != 0x0 || *(u32 *)0x8000629C != 0x4E800020 || *(u32 *)0x80259198 == 0x9421FF98)
 {
-     return WL_ERROR_PAYLOAD_STAGE1_WAITING;
+        return WL_ERROR_PAYLOAD_STAGE1_WAITING;
+}
 }
 
     CallCtors(payload);
