@@ -33,10 +33,11 @@ typedef double f64;
 #  ifdef PROD
 #    define WWFC_DOMAIN "zplwii.xyz"
 #  else
-#    define WWFC_DOMAIN "zplwii.xyz" // Points to localhost
+#    define WWFC_DOMAIN "zpltest.xyz" // Test Server
 #  endif
 
 #endif
+
 
 typedef struct {
     char magic[0xC]; // Always "WWFC/Payload"
