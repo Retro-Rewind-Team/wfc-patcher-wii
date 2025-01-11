@@ -93,25 +93,25 @@
 #if RSBED01 | RSBED02
 
 // Super Smash Bros. Brawl Rev 1, Rev 2 [NTSC-U]
-#define RSB 1
-#define RSBX_PORT(E, J, P0, P1) E
+#  define RSB 1
+#  define RSBX_PORT(E, J, P0, P1) E
 
 #elif RSBJD00 | RSBJD01
 
 // Super Smash Bros. Brawl Rev 0, Rev 1 [NTSC-J]
-#define RSB 1
-#define RSBX_PORT(E, J, P0, P1) J
+#  define RSB 1
+#  define RSBX_PORT(E, J, P0, P1) J
 
 #elif RSBPD00
 
 // Super Smash Bros. Brawl Rev 0 [PAL]
-#define RSB 1
-#define RSBX_PORT(E, J, P0, P1) P0
+#  define RSB 1
+#  define RSBX_PORT(E, J, P0, P1) P0
 
 #elif RSBPD01
 
 // Super Smash Bros. Brawl Rev 1 [PAL]
-#define RSB 1
-#define RSBX_PORT(E, J, P0, P1) P1
+#  define RSB 1
+#  define RSBX_PORT(E, J, P0, P1) P1
 
 #endif

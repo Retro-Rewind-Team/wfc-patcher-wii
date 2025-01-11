@@ -539,7 +539,8 @@ static bool IsRacePacketValid(
         RacePacket::EType packetType = static_cast<RacePacket::EType>(n);
         u8 packetSize = racePacket->sizes[n];
 
-        if (!IsPacketSizeValid(packetType, packetSize)) {
+        const char* pulsarMagic = reinterpret_cast<const char*>(0x800017CC);
+        if (!IsPacketSizeValid(packetType, packetSize) && strcmp(pulsarMagic, "PUL2") != 0 ) { // Pulsar 2 has it's own packet verification due to its packet expansion, so skip it here
             return false;
         }
 

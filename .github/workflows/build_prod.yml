@@ -30,7 +30,7 @@ jobs:
             - name: Build Payload
               run: |
                 cd ./payload
-                python3 make-payload.py -DPROD -j
+                python3 make-payload.py -DPROD -j -tRMC
                 mv ./binary ./payload
                 cd ..
             - name: Upload Payload Files
