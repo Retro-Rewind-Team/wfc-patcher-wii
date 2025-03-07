@@ -125,7 +125,7 @@ GetMessageOfTheDay(GameSpy::GPResult gpResult, const char* message)
         return gpResult;
     }
 
-    const char motdKey[] = "\\wwfc_motd\\";
+    const char motdKey[] = "\\wl:motd\\";
     char value[512];
     if (!GameSpy::gpiValueForKey(message, motdKey, value, sizeof(value))) {
         return gpResult;
@@ -272,6 +272,33 @@ WWFC_DEFINE_PATCH = {
             SelectHandler::ResetKickTimer();
 
             return selectHandler;
+        }
+        // clang-format on
+    ),
+};
+
+// Report information about the upcoming match to the server
+WWFC_DEFINE_PATCH = {
+    Patch::CallWithCTR( //
+        WWFC_PATCH_LEVEL_FEATURE, //
+        RMCXD_PORT(0x8066148C, 0x80659550, 0x80660AF8, 0x8064F7A4), //
+        // clang-format off
+        []() -> void {
+            using namespace mkw::Net;
+
+            SelectHandler* selectHandler = SelectHandler::Instance();
+            selectHandler->decideCourse();
+            selectHandler->initPlayerIdsToPlayerAids();
+
+            SelectHandler::Packet::SelectedCourse selectedCourse =
+                selectHandler->sendPacket().selectedCourse;
+            SelectHandler::Packet::EngineClass engineClass =
+                selectHandler->sendPacket().engineClass;
+
+            wwfc::GPReport::ReportU32(
+                "wl:mkw_select_course", static_cast<u32>(selectedCourse)
+            );
+            wwfc::GPReport::ReportU32("wl:mkw_select_cc", static_cast<u32>(engineClass));
         }
         // clang-format on
     ),
