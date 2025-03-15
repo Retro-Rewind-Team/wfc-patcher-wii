@@ -100,11 +100,17 @@ LONGCALL int gpiAppendIntToBuffer( //
     GPConnection* connection, GPIBuffer* outputBuffer, int num
 ) AT(ADDRESS_gpiAppendIntToBuffer);
 
+LONGCALL int gpiAppendCharToBuffer( //
+    GPConnection* connection, GPIBuffer* outputBuffer, char c
+) AT(RMCXD_PORT(0x800FEE90, 0x800FEDF0, 0x800FEDB0, 0x800FEF08));
+
+#if RMC
+
 LONGCALL GPIBool gpiValueForKey( //
     const char* command, const char* key, char* value, int length
 ) AT(ADDRESS_gpiValueForKey);
 
-#if RMC
+
 
 GPResult
 gpiSendLocalInfo(GPConnection* gpConnection, const char* key, const char* value)

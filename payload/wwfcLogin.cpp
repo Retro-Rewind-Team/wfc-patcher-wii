@@ -1,7 +1,9 @@
 #include "import/dwc.h"
 #include "import/gamespy.h"
 #include "import/revolution.h"
+#include "import/mkw/net/netdigest.hpp"
 #include "wwfcHostPlatform.hpp"
+#include "wwfcLibC.hpp"
 #include "wwfcLog.hpp"
 #include "wwfcPatch.hpp"
 #include "wwfcPayload.hpp"
@@ -166,6 +168,36 @@ void SendExtendedLogin(
     GameSpy::gpiAppendStringToBuffer(
         connection, outputBuffer, HostPlatform::IsDolphin() ? "Dolphin" : "Wii"
     );
+
+    
+    LONGCALL void NETSHA1Init( //
+        NETSHA1CTX* ctx
+    ) AT(RMCXD_PORT(0x801D24F4, 0x801D2454, 0x801D2414, 0x801D2850));
+    LONGCALL void NETSHA1Update( //
+        NETSHA1CTX* ctx, const void* input, u32 length
+    ) AT(RMCXD_PORT(0x801D2544, 0x801D24A4, 0x801D2464, 0x801D28A0));
+    LONGCALL void NETSHA1GetDigest( //
+        NETSHA1CTX* ctx, void* digest
+    ) AT(RMCXD_PORT(0x801D25F8, 0x801D2558, 0x801D2518, 0x801D2954));
+
+    u8* digest = reinterpret_cast<u8*>(0x800017b0);
+    char strDigest[41];
+    for (int i = 0; i < 20; i++) {
+        snprintf(strDigest + i * 2, 3, "%02x", digest[i]);
+    }
+    
+    // u32* dataPtr = reinterpret_cast<u32*>(0x800017C4);
+    // u32 length = *reinterpret_cast<u32*>(0x800017C8);
+    // u32 crc32 = NETCalcCRC32(dataPtr, length);
+    // GameSpy::gpiAppendStringToBuffer(connection, outputBuffer, "\\crc32\\");
+    // GameSpy::gpiAppendIntToBuffer(connection, outputBuffer, crc32);
+
+    GameSpy::gpiAppendStringToBuffer(connection, outputBuffer, "\\pack_id\\");
+    GameSpy::gpiAppendIntToBuffer(connection, outputBuffer, *reinterpret_cast<const u32*>(0x800017D0));
+    GameSpy::gpiAppendStringToBuffer(connection, outputBuffer, "\\pack_ver\\");
+    GameSpy::gpiAppendIntToBuffer(connection, outputBuffer, *reinterpret_cast<const u32*>(0x800017D4));
+    GameSpy::gpiAppendStringToBuffer(connection, outputBuffer, "\\pack_hash\\");
+    GameSpy::gpiAppendStringToBuffer(connection, outputBuffer, strDigest);
 
     GameSpy::gpiAppendStringToBuffer(connection, outputBuffer, "\\final\\");
 }
