@@ -211,6 +211,8 @@ WWFC_DEFINE_PATCH = {
 };
 
 // Report information about the upcoming match to the server
+//Note: Conflicts with pulsar, so it is commented out for now
+/*
 WWFC_DEFINE_PATCH = {
     Patch::CallWithCTR( //
         WWFC_PATCH_LEVEL_FEATURE, //
@@ -236,6 +238,7 @@ WWFC_DEFINE_PATCH = {
         // clang-format on
     ),
 };
+*/
 
 // Allow the "Open Host" feature to be enabled via the press of a button
 WWFC_DEFINE_PATCH = {
