@@ -12,5 +12,6 @@
 #include "wwfcNatneg.cpp"
 #include "wwfcPatch.cpp"
 #include "wwfcPayload.cpp"
+#include "wwfcQR2.cpp"
 #include "wwfcSecurity.cpp"
 #include "wwfcSupport.cpp"

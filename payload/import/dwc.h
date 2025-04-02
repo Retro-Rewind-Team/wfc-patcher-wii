@@ -79,7 +79,9 @@ LONGCALL int DWC_CloseConnectionHard(u8 playerAid)
 
 typedef struct {
     /* 0x00 */ u32 profileId;
-    /* 0x04 */ u8 _04[0x30 - 0x04];
+    /* 0x04 */ u8 _04[0x16 - 0x04];
+    /* 0x16 */ u8 aid;
+    /* 0x17 */ u8 _17[0x30 - 0x17];
 } DWCiNodeInfo;
 
 #  ifdef __cplusplus
@@ -94,7 +96,19 @@ LONGCALL int DWC_CheckFriendKey(const DWCUserData* userData, u64 friendKey)
 
 typedef struct {
     /* 0x0 */ GameSpy::GPConnection* connection;
+    /* 0x4 */ u8 _04[0x30 - 0x04];
+    /* 0x30 */ u32 numHosts;
+    /* 0x34 */ u32 _34;
+    /* 0x38 */ DWCiNodeInfo nodes[32];
+    /* 0x638 */ u32 serverProfileID;
+    /* 0x63c */ u8 _638[0x778 - 0x63c];
+    /* 0x778 */ u32 profileID;
+    /* 0x77c */ u8 _77C[0x8C0 - 0x77c];
 } DWCMatchContext;
+
+#  ifdef __cplusplus
+static_assert(sizeof(DWCMatchContext) == 0x8C0);
+#  endif
 
 extern DWCMatchContext*
     stpMatchCnt AT(RMCXD_PORT(0x8038630C, 0x80381F8C, 0x80385C8C, 0x8037432C));
@@ -120,6 +134,10 @@ LONGCALL s32 DWC_Base64Decode(
 LONGCALL s32 DWCi_SetError( //
     s32 errorClass, s32 errorCode
 ) AT(ADDRESS_DWCi_SetError);
+
+LONGCALL s32 DWCi_HandleGPError( //
+    s32 gpError
+) AT(ADDRESS_DWCi_HandleGPError);
 
 #ifdef __cplusplus
 }

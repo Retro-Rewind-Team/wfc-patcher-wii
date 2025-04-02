@@ -83,6 +83,16 @@ CallWithCTR(u8 level, u32 address, auto function, u32 tempReg = r12)
     };
 }
 
+constexpr wwfc_patch Call(u8 level, u32 address, auto function)
+{
+    return wwfc_patch{
+        .level = level,
+        .type = WWFC_PATCH_TYPE_CALL,
+        .address = address,
+        .arg0 = u32(+function),
+    };
+}
+
 #define _WWFC_DEFINE_PATCH2(NUM)                                               \
     __attribute__((__section__(".wwfc_patch"))) wwfc_patch __wwfc_patch_##NUM[]
 
