@@ -9,6 +9,20 @@ namespace RVL
 {
 #endif
 
+typedef struct SOInAddr {
+    u32 addr;
+} SOInAddr;
+
+typedef struct SOSockAddrIn {
+    u8 len;
+    u8 family;
+    u16 port;
+    SOInAddr addr;
+} SOSockAddrIn;
+
+static_assert(sizeof(SOInAddr) == 4);
+static_assert(sizeof(SOSockAddrIn) == 8);
+
 typedef enum {
     SCLanguageJapanese = 0x00,
     SCLanguageEnglish = 0x01,

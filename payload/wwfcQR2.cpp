@@ -1,5 +1,6 @@
 #include "import/dwc.h"
 #include "import/mkw/net/net.hpp"
+#include "import/qr2.h"
 #include "wwfcLog.hpp"
 #include "wwfcPatch.hpp"
 #include "wwfcUtil.h"
@@ -19,24 +20,27 @@ WWFC_DEFINE_PATCH = {
         WWFC_PATCH_LEVEL_CRITICAL, //
         RMCXD_PORT(0x800d879c, 0x800d86fc, 0x800d86bc, 0x800d87fc), //
         // clang-format off
-        [](void* qrec,
+        [](QR2::qr2_t qrec,
            char* query,
            int len,
            struct sockaddr* sender) -> void {
 
             LONGCALL void qr2_parse_queryA(
-                void* qrec, char* query, int len, struct sockaddr* sender
+                QR2::qr2_t qrec, char* query, int len, struct sockaddr* sender
             ) AT(RMCXD_PORT(0x80110720, 0x80110680, 0x80110640, 0x80110798));
 
-            if (!qrec || query[0] == ';')
+            if (!qrec || !sender || query[0] == ';' || len < 7)
                 return qr2_parse_queryA(qrec, query, len, sender);
-
-            if (len < 7)
-                return;
 
             if ((u8)query[0] != QR_MAGIC_1 || (u8)query[1] != QR_MAGIC_2)
                 return qr2_parse_queryA(qrec, query, len, sender);
 
+            u32 senderAddr = ((RVL::SOSockAddrIn*)sender)->addr.addr;
+            if (qrec->hbaddr.addr.addr != senderAddr) {
+                LOG_INFO("QR2: Packet sent by non-master server.");
+                return qr2_parse_queryA(qrec, query, len, sender);
+            }
+    
             char command = query[2];
             switch (command) {
                 // The server orders us to cut the connection to a PID
