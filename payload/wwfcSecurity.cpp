@@ -147,8 +147,11 @@ static bool IsPacketSizeValid(RacePacket::EType packetType, u8 packetSize)
         }
     }
 
+    const char* pulsarMagic = reinterpret_cast<const char*>(0x800017CC);
+    const bool isPulsar = strcmp(pulsarMagic, "PUL2") == 0;
+
     size_t* packetBufferSizesPointer;
-    if (!NetController::Instance()->inVanillaMatch()) {
+    if (!NetController::Instance()->inVanillaMatch() || isPulsar) {
         extern size_t packetBufferSizes[sizeof(RacePacket::sizes)] AT(
             RMCXD_PORT(0x8089A194, 0x80895AC4, 0x808992F4, 0x808885CC)
         );
@@ -185,7 +188,7 @@ static bool IsPacketSizeValid(RacePacket::EType packetType, u8 packetSize)
     }
     case RacePacket::RoomSelect: {
         // 'Room' packet
-        if (packetSize < sizeof(SelectHandler::Packet)) {
+        if (!isPulsar && packetSize < sizeof(SelectHandler::Packet)) {
             return packetSize == sizeof(RoomHandler::Packet);
         }
 
@@ -302,7 +305,7 @@ IsRoomSelectPacketDataValid(const void* packet, u8 packetSize, u8 playerAid)
     using namespace mkw::System;
 
     // 'Room' packet
-    if (packetSize == sizeof(RoomHandler::Packet)) {
+    if (packetSize < sizeof(SelectHandler::Packet)) {
         const RoomHandler::Packet* roomPacket =
             reinterpret_cast<const RoomHandler::Packet*>(packet);
 
@@ -539,8 +542,7 @@ static bool IsRacePacketValid(
         RacePacket::EType packetType = static_cast<RacePacket::EType>(n);
         u8 packetSize = racePacket->sizes[n];
 
-        const char* pulsarMagic = reinterpret_cast<const char*>(0x800017CC);
-        if (!IsPacketSizeValid(packetType, packetSize) && strcmp(pulsarMagic, "PUL2") != 0 ) { // Pulsar 2 has it's own packet verification due to its packet expansion, so skip it here
+        if (!IsPacketSizeValid(packetType, packetSize)) {
             return false;
         }
 
