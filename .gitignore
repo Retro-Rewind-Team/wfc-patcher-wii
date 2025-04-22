@@ -51,3 +51,7 @@ launcher/build
 *.dol
 *.wad
 *.app
+
+# Keys that should likely not be comitted
+misc/private-key-OUT.pem
+misc/wwfcPayloadPublicKey-OUT.hpp
