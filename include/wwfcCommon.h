@@ -31,13 +31,14 @@ typedef double f64;
 #ifndef WWFC_DOMAIN
 
 #  ifdef PROD
-#    define WWFC_DOMAIN "zplwii.xyz"
+#    define WWFC_DOMAIN "rwfc.net" // Production server
+#  elif defined(TEST)
+#    define WWFC_DOMAIN "zpltest.xyz" // Testing server
 #  else
-#    define WWFC_DOMAIN "zpltest.xyz" // Test Server
+#    define WWFC_DOMAIN "nwfc.wiinoma.com" // Points to localhost
 #  endif
 
 #endif
-
 
 typedef struct {
     char magic[0xC]; // Always "WWFC/Payload"
