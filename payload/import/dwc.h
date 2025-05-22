@@ -79,7 +79,10 @@ LONGCALL int DWC_CloseConnectionHard(u8 playerAid)
 
 typedef struct {
     /* 0x00 */ u32 profileId;
-    /* 0x04 */ u8 _04[0x16 - 0x04];
+    /* 0x04 */ u32 ipAddr;
+    /* 0x08 */ u8 _08[0xC - 0x08];
+    /* 0x0C */ u16 port;
+    /* 0x0E */ u8 _0E[0x16 - 0x0E];
     /* 0x16 */ u8 aid;
     /* 0x17 */ u8 _17[0x30 - 0x17];
 } DWCiNodeInfo;

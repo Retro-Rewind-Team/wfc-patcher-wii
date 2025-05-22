@@ -1,6 +1,7 @@
 #include "import/dwc.h"
 #include "import/mkw/net/net.hpp"
 #include "import/qr2.h"
+#include "import/revolution.h"
 #include "wwfcLog.hpp"
 #include "wwfcPatch.hpp"
 #include "wwfcUtil.h"
@@ -29,6 +30,10 @@ WWFC_DEFINE_PATCH = {
                 QR2::qr2_t qrec, char* query, int len, struct sockaddr* sender
             ) AT(RMCXD_PORT(0x80110720, 0x80110680, 0x80110640, 0x80110798));
 
+            LONGCALL char *SOINetNToA(
+                u32 ip
+            ) AT(RMCXD_PORT(0x801ed938, 0x801ed898, 0x801ed858, 0x801edd60));
+
             if (!qrec || !sender || query[0] == ';' || len < 7)
                 return qr2_parse_queryA(qrec, query, len, sender);
 
@@ -49,26 +54,38 @@ WWFC_DEFINE_PATCH = {
                         break;
 
                     // Length byte comes after 7 byte qr2 header
-                    u8 pidCount = *(u8*)&query[7];
+                    u8 playerCount = *(u8*)&query[7];
 
                     int i = 8;
                     u8 j = 0;
-                    // Repeated sequence of u32s starting at byte 9 (index 8)
-                    for (; i + 4 < len && j < pidCount; i += 4, j++) {
+
+                    // Repeated sequence of u32 pairs starting at byte 9 (index 8)
+                    for (; i + 8 < len && j < playerCount; i += 8, j++) {
                         u32 pid = *(u32*)&query[i];
+                        u32 ip = *(u32*)&query[i + 4];
 
-                        // If the PID to remove is the host or ourself, DC from the room
-                        if (pid == DWC::stpMatchCnt->serverProfileID || pid == DWC::stpMatchCnt->profileID) {
-                            DWC::DWCi_HandleGPError(3);
-                            DWC::DWCi_SetError(6, -83337);
-                            break;
-                        }
+                        LOG_INFO_FMT("QR2: Received kick order for PID %d:, IP %s", pid, SOINetNToA(ip));
 
-                        // If the PID is another peer, close the connection to them
                         DWC::DWCiNodeInfo* nodes = DWC::stpMatchCnt->nodes;
                         for (int i = 0; i < 32; i++) {
-                            if (nodes[i].profileId == pid)
-                                DWC::DWC_CloseConnectionHard(nodes[i].aid);
+                            DWC::DWCiNodeInfo node = nodes[i];
+
+                            // If either matches, then we kick. Otherwise return
+                            if (node.ipAddr != ip && node.profileId != pid)
+                                continue;
+
+                            // If the IP to remove is the host or ourself, DC from the room
+                            // Have to check both the node pid and the actual pid, in case of spoofing
+                            if (node.profileId == DWC::stpMatchCnt->serverProfileID
+                                || pid == DWC::stpMatchCnt->serverProfileID
+                                || node.profileId == DWC::stpMatchCnt->profileID
+                                || pid == DWC::stpMatchCnt->profileID) {
+                                DWC::DWCi_HandleGPError(3);
+                                DWC::DWCi_SetError(6, -83337);
+                                break;
+                            }
+
+                            DWC::DWC_CloseConnectionHard(nodes[i].aid);
                         }
                     }
 
