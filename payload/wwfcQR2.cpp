@@ -1,5 +1,4 @@
 #include "import/dwc.h"
-#include "import/mkw/net/net.hpp"
 #include "import/qr2.h"
 #include "import/revolution.h"
 #include "wwfcLog.hpp"
@@ -42,7 +41,7 @@ WWFC_DEFINE_PATCH = {
 
             u32 senderAddr = ((RVL::SOSockAddrIn*)sender)->addr.addr;
             if (qrec->hbaddr.addr.addr != senderAddr) {
-                LOG_INFO("QR2: Packet sent by non-master server.");
+                WWFC_LOG_INFO("QR2: Packet sent by non-master server.");
                 return qr2_parse_queryA(qrec, query, len, sender);
             }
 
@@ -64,7 +63,7 @@ WWFC_DEFINE_PATCH = {
                         u32 pid = *(u32*)&query[i];
                         u32 ip = *(u32*)&query[i + 4];
 
-                        LOG_INFO_FMT("QR2: Received kick order for PID %d:, IP %s", pid, SOINetNToA(ip));
+                        WWFC_LOG_INFO_FMT("QR2: Received kick order for PID %d:, IP %s", pid, SOINetNToA(ip));
 
                         DWC::DWCiNodeInfo* nodes = DWC::stpMatchCnt->nodes;
                         for (int i = 0; i < 32; i++) {
