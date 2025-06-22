@@ -58,18 +58,22 @@ WWFC_DEFINE_PATCH = {
                     int i = 8;
                     u8 j = 0;
 
+                    WWFC_LOG_INFO_FMT("QR2: Received kick order! Contains %d players.", playerCount);
+
                     // Repeated sequence of u32 pairs starting at byte 9 (index 8)
                     for (; i + 8 < len && j < playerCount; i += 8, j++) {
                         u32 pid = *(u32*)&query[i];
                         u32 ip = *(u32*)&query[i + 4];
 
-                        WWFC_LOG_INFO_FMT("QR2: Received kick order for PID %d:, IP %s", pid, SOINetNToA(ip));
+                        WWFC_LOG_INFO_FMT("QR2: Received kick order for PID %d, IP %s : %d", pid, SOINetNToA(ip), ip);
 
                         DWC::DWCiNodeInfo* nodes = DWC::stpMatchCnt->nodes;
                         for (int i = 0; i < 32; i++) {
                             DWC::DWCiNodeInfo node = nodes[i];
 
-                            // If either matches, then we kick. Otherwise return
+                            WWFC_LOG_INFO_FMT("Testing against PID %d, IP %d", node.profileId, node.ipAddr);
+
+                            // If either matches, then we kick. Otherwise skip iter
                             if (node.ipAddr != ip && node.profileId != pid)
                                 continue;
 
@@ -81,9 +85,11 @@ WWFC_DEFINE_PATCH = {
                                 || pid == DWC::stpMatchCnt->profileID) {
                                 DWC::DWCi_HandleGPError(3);
                                 DWC::DWCi_SetError(6, -83337);
+                                WWFC_LOG_INFO_FMT("Kick order matched host or yourself: PID %d, IP %d", node.profileId, node.ipAddr);
                                 break;
                             }
 
+                            WWFC_LOG_INFO_FMT("Closing connection for PID %d, IP %d", node.profileId, node.ipAddr);
                             DWC::DWC_CloseConnectionHard(nodes[i].aid);
                         }
                     }
