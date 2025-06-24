@@ -97,13 +97,17 @@ int gpiAddLocalInfoHook(
     return 0;
 }
 
-const char syms[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-void byteToHexStr(char* buf, u8 n) {
+const char syms[16] = {'0', '1', '2', '3', '4', '5', '6', '7',
+                       '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+
+void byteToHexStr(char buf[2], u8 n)
+{
     u8 upper = n >> 4;
     u8 lower = n & 0x0f;
 
     buf[0] = syms[upper];
     buf[1] = syms[lower];
+    buf[2] = '\0';
 }
 
 void SendExtendedLogin(
@@ -187,8 +191,9 @@ void SendExtendedLogin(
 
     u8* digest = reinterpret_cast<u8*>(0x800017b0);
     char strDigest[41];
-    for (int i = 0; i < 20; i++)
+    for (int i = 0; i < 20; i++) {
         byteToHexStr(strDigest + i * 2, digest[i]);
+    }
 
     // u32* dataPtr = reinterpret_cast<u32*>(0x800017C4);
     // u32 length = *reinterpret_cast<u32*>(0x800017C8);
