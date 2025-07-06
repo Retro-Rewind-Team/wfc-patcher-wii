@@ -271,6 +271,40 @@ WWFC_DEFINE_PATCH = {
     ),
 };
 
+// Fix VR limit in serverbrowser requests [ppeb]
+// 30000 VR
+const u8 LIMIT[2] = {0x75, 0x30};
+// EV
+WWFC_DEFINE_PATCH = { //
+    Patch::Write( //
+        WWFC_PATCH_LEVEL_FEATURE, //
+        RMCXD_PORT(0x80659342, 0x80654eba, 0x806589ae, 0x8064765a), //
+        LIMIT
+    ),
+};
+WWFC_DEFINE_PATCH = { //
+    Patch::Write( //
+        WWFC_PATCH_LEVEL_FEATURE, //
+        RMCXD_PORT(0x8065934a, 0x80654ec2, 0x806589b6, 0x80647662), //
+        LIMIT
+    ),
+};
+// EB
+WWFC_DEFINE_PATCH = { //
+    Patch::Write( //
+        WWFC_PATCH_LEVEL_FEATURE, //
+        RMCXD_PORT(0x80659422, 0x80654f9a, 0x80658a8e, 0x8064773a), //
+        LIMIT
+    ),
+};
+WWFC_DEFINE_PATCH = { //
+    Patch::Write( //
+        WWFC_PATCH_LEVEL_FEATURE, //
+        RMCXD_PORT(0x8065942a, 0x80654fa2, 0x80658a96, 0x80647742), //
+        LIMIT
+    ),
+};
+
 } // namespace wwfc::mkw::Feature
 
 #endif // RMC
