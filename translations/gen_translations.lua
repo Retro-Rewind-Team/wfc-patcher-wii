@@ -1,7 +1,7 @@
 local http_request = require("http.request")
 local utils = require("./utils")
 
-local SHEETS_CSV_URL =
+local SHEETS_TSV_URL =
     [[https://docs.google.com/spreadsheets/d/1kas1J6RcIePcaRRxtTluPZm8C8kydpaoQBtRg15M-zM/export?format=tsv&gid=1517055494#gid=1517055494]]
 
 local ORDERED_MESSAGES = {
@@ -11,37 +11,42 @@ local ORDERED_MESSAGES = {
     "s_openHostDisabledMessages",
 }
 
--- TODO: Payload only supports default 10 languages
 local ORDERED_LANGUAGES = {
     "Japanese",
     "English",
     "German",
-    "French",
-    "Spanish",
+    "French_", -- Placeholder, won't be found. For proper array offsets.
+    "Spanish(NTSC)",
     "Italian",
     "Dutch",
     "Chinese (Simplified)",
+    "Chinese (Traditional)",
     "Korean",
 
-    -- -- Custom
-    -- "Czech",
-    -- "Norwegian",
-    -- "Russian",
-    -- "Arabic",
-    -- "Turkish",
-    -- "Finnish",
+    -- Custom
+    "Czech",
+    "Norwegian",
+    "Russian",
+    "Portuguese_", -- Placeholder, won't be found. For proper array offsets.
+    "Arabic",
+    "Turkish",
+    "Finnish",
 
-    -- -- EU
-    -- "French",
-    -- -- Custom
-    -- "Portuguese",
+    -- EU
+    "EnglishEU", -- Placeholder, won't be found. For proper array offsets.
+    "Spanish(EU)",
+    "French",
+    -- Custom
+    "Portuguese",
 }
 
-local headers, stream = assert(http_request.new_from_uri(SHEETS_CSV_URL):go())
+print("Downloading sheet as tsv")
+local headers, stream = assert(http_request.new_from_uri(SHEETS_TSV_URL):go())
 local body = assert(stream:get_body_as_string())
 if headers:get(":status") ~= "200" then
     error(body)
 end
+print("Downloaded sheet")
 
 -- local infd = io.open("./WhWz & RR Translation - RR_ Server-Side Text.tsv")
 -- assert(infd, "Please download the spreadsheet as 'WhWz & RR Translation - RR_ Server-Side Text.tsv'")
@@ -69,6 +74,7 @@ end
 
 local messages = {}
 
+print("Processing sheet into message objects")
 for _, line in ipairs(split) do
     local translations = utils.split_by_pattern(line, "\t")
     local message = table.remove(translations, 1)
@@ -93,6 +99,7 @@ local output_lines = {
 }
 
 for i, message_name in ipairs(ORDERED_MESSAGES) do
+    print("Adding message " .. message_name)
     local message = messages[message_name]
     assert(message, "Missing message for " .. message_name)
     table.insert(output_lines, "    const wchar_t* \\")
@@ -100,16 +107,18 @@ for i, message_name in ipairs(ORDERED_MESSAGES) do
 
     for _, lang in ipairs(ORDERED_LANGUAGES) do
         local translation = message.langs[lang]
-        if translation ~= "" then
+        if translation and translation ~= "" then
+            print(("    %s: Present"):format(lang))
             local splits = utils.split_by_pattern(translation, "\n")
             for _, v in ipairs(splits) do
                 local segment = utils.trim(v)
-                -- Sheet has incorrect symbols. Whatever
-                segment = segment:gsub(";", ",")
+                segment = segment:gsub("%s*+%s*", ('\\n" /* %s */ \\\n"'):format(lang))
+                segment = ('L"%s",'):format(segment)
                 table.insert(output_lines, string.format("            %s \\", segment))
             end
         else
-            table.insert(output_lines, "            nullptr, \\")
+            print(("    %s: Missing"):format(lang))
+            table.insert(output_lines, ("            nullptr, /* %s */ \\"):format(lang))
         end
     end
 
