@@ -23,41 +23,60 @@ u8 GetExLang(void)
     u8 exLang = 0;
 
     switch (raceRename) {
-    case 0x4A: // 'J'
+    case 'J':
         exLang = RVL::SCLanguageJapanese;
         break;
-    case 0x46: // 'F'
-        exLang = RVL::SCLanguageFrenchEU;
-        break;
-    case 0x47: // 'G'
+    // SCLanguageEnglish Unsupported. Handled by vanilla
+    case 'G':
         exLang = RVL::SCLanguageGerman;
         break;
-    case 0x44: // 'D'
-        exLang = RVL::SCLanguageDutch;
-        break;
-    case 0x55: // 'U'
+    // SCLanguageFrench Unsupported. We only have FrenchEU
+    case 'U':
         exLang = RVL::SCLanguageSpanish;
         break;
-    case 0x45: // 'E'
-        exLang = RVL::SCLanguageSpanishEU;
-        break;
-    case 0x4E: // 'N'
-        exLang = RVL::SCLanguageFinnish;
-        break;
-    case 0x49: // 'I'
+    case 'I':
         exLang = RVL::SCLanguageItalian;
         break;
-    case 0x4B: // 'K'
+    case 'D':
+        exLang = RVL::SCLanguageDutch;
+        break;
+    case 'W':
+        exLang = RVL::SCLanguageSimplifiedChinese;
+        break;
+    case 'Z':
+        exLang = RVL::SCLanguageTraditionalChinese;
+        break;
+    case 'K':
         exLang = RVL::SCLanguageKorean;
         break;
-    case 0x41: // 'A'
+    case 'C':
+        exLang = RVL::SCLanguageCzech;
+        break;
+    case 'O': // 'O'
+        exLang = RVL::SCLanguageNorwegian;
+        break;
+    case 'A':
         exLang = RVL::SCLanguageRussian;
         break;
-    case 0x54: // 'T'
+    // SCLanguagePortuguese Unsupported. We only have PortugueseEU
+    case 'B':
+        exLang = RVL::SCLanguageArabic;
+        break;
+    case 'T':
         exLang = RVL::SCLanguageTurkish;
         break;
-    case 0x43: // 'C'
-        exLang = RVL::SCLanguageCzech;
+    case 'N':
+        exLang = RVL::SCLanguageFinnish;
+        break;
+    // SCLanguageEnglishEU Unsupported. Just use English
+    case 'F':
+        exLang = RVL::SCLanguageFrenchEU;
+        break;
+    case 'E':
+        exLang = RVL::SCLanguageSpanishEU;
+        break;
+    case 'P':
+        exLang = RVL::SCLanguagePortugueseEU;
         break;
     default:
         // Unknown, fall back to RVL System Language
