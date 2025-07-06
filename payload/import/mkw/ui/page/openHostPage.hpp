@@ -9,6 +9,7 @@
 #  include "import/mkw/ui/section/sectionManager.hpp"
 #  include "import/revolution.h"
 #  include "messagePopupPage.hpp"
+#  include "wwfcLanguage.hpp"
 #  include "yesNoPopupPage.hpp"
 
 namespace wwfc::mkw::UI
@@ -65,7 +66,7 @@ private:
 
     const wchar_t* openHostPromptMessage() const
     {
-        u8 language = RVL::SCGetLanguage();
+        u8 language = wwfc::Language::GetExLang();
 
         const wchar_t* openHostPromptMessage =
             s_openHostPromptMessages[language];
@@ -78,7 +79,7 @@ private:
 
     const wchar_t* connectionLostMessage() const
     {
-        u8 language = RVL::SCGetLanguage();
+        u8 language = wwfc::Language::GetExLang();
 
         const wchar_t* connectionLostMessage =
             s_connectionLostMessages[language];
@@ -91,7 +92,7 @@ private:
 
     const wchar_t* openHostEnabledMessage() const
     {
-        u8 language = RVL::SCGetLanguage();
+        u8 language = wwfc::Language::GetExLang();
 
         const wchar_t* openHostEnabledMessage =
             s_openHostEnabledMessages[language];
@@ -104,7 +105,7 @@ private:
 
     const wchar_t* openHostDisabledMessage() const
     {
-        u8 language = RVL::SCGetLanguage();
+        u8 language = wwfc::Language::GetExLang();
 
         const wchar_t* openHostDisabledMessage =
             s_openHostDisabledMessages[language];

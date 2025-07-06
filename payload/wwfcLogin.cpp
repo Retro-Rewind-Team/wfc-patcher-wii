@@ -3,6 +3,7 @@
 #include "import/mkw/net/netdigest.hpp"
 #include "import/revolution.h"
 #include "wwfcHostPlatform.hpp"
+#include "wwfcLanguage.hpp"
 #include "wwfcLibC.hpp"
 #include "wwfcLog.hpp"
 #include "wwfcPatch.hpp"
@@ -211,6 +212,12 @@ void SendExtendedLogin(
     );
     GameSpy::gpiAppendStringToBuffer(connection, outputBuffer, "\\pack_hash\\");
     GameSpy::gpiAppendStringToBuffer(connection, outputBuffer, strDigest);
+
+    GameSpy::gpiAppendStringToBuffer(connection, outputBuffer, "\\ex_lang\\");
+    GameSpy::gpiAppendIntToBuffer(
+        connection, outputBuffer,
+        Language::ExLangToServerLang(Language::GetExLang())
+    );
 
     GameSpy::gpiAppendStringToBuffer(connection, outputBuffer, "\\final\\");
 }

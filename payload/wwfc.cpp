@@ -7,6 +7,7 @@
 #include "wwfcError.cpp"
 #include "wwfcGPReport.cpp"
 #include "wwfcHostPlatform.cpp"
+#include "wwfcLanguage.cpp"
 #include "wwfcLibC.cpp"
 #include "wwfcLogin.cpp"
 #include "wwfcMii.cpp"

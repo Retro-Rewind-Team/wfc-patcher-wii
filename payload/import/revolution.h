@@ -34,7 +34,26 @@ typedef enum {
     SCLanguageSimplifiedChinese = 0x07,
     SCLanguageTraditionalChinese = 0x08,
     SCLanguageKorean = 0x09,
-    SCLanguageCount,
+
+    // Server Languages
+
+    // Custom Languages
+    SCLanguageCzech = 0x0A,
+    SCLanguageNorwegian = 0x0B,
+    SCLanguageRussian = 0x0C,
+    SCLanguagePortuguese = 0x0D,
+    SCLanguageArabic = 0x0E,
+    SCLanguageTurkish = 0x10,
+    SCLanguageFinnish = 0x11,
+
+    SCLanguageEnglishEU = 0x12,
+    SCLanguageFrenchEU = 0x13,
+    SCLanguageSpanishEU = 0x14,
+
+    // Custom Lanuages
+    SCLanguagePortugueseEU = 0x15,
+
+    SCLanguageCount = 0x16,
 } SCLanguage;
 
 LONGCALL bool OSDisableInterrupts( //
