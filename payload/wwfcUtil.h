@@ -20,7 +20,7 @@
 // Mario Kart Wii Rev 0 [PAL]
 #  define RMC 1
 
-#  define RMCXD_PORT(P, E, J, K) P
+#  define RMCXD_PORT(P, E, J, K, DJ) P
 #  define RMCXN_PORT(P, E, J, K)
 
 #elif RMCED00
@@ -28,7 +28,7 @@
 // Mario Kart Wii Rev 0 [NTSC-U]
 #  define RMC 1
 
-#  define RMCXD_PORT(P, E, J, K) E
+#  define RMCXD_PORT(P, E, J, K, DJ) E
 #  define RMCXN_PORT(P, E, J, K)
 
 #elif RMCJD00
@@ -36,7 +36,7 @@
 // Mario Kart Wii Rev 0 [NTSC-J]
 #  define RMC 1
 
-#  define RMCXD_PORT(P, E, J, K) J
+#  define RMCXD_PORT(P, E, J, K, DJ) J
 #  define RMCXN_PORT(P, E, J, K)
 
 #elif RMCKD00
@@ -44,7 +44,7 @@
 // Mario Kart Wii Rev 0 [NTSC-J]
 #  define RMC 1
 
-#  define RMCXD_PORT(P, E, J, K) K
+#  define RMCXD_PORT(P, E, J, K, DJ) K
 #  define RMCXN_PORT(P, E, J, K)
 
 #elif RMCPN0001
@@ -52,7 +52,7 @@
 // Mario Kart Channel Rev 0 [PAL]
 #  define RMCN 1
 
-#  define RMCXD_PORT(P, E, J, K)
+#  define RMCXD_PORT(P, E, J, K, DJ)
 #  define RMCXN_PORT(P, E, J, K) P
 
 #elif RMCEN0001
@@ -60,7 +60,7 @@
 // Mario Kart Channel Rev 0 [NTSC-U]
 #  define RMCN 1
 
-#  define RMCXD_PORT(P, E, J, K)
+#  define RMCXD_PORT(P, E, J, K, DJ)
 #  define RMCXN_PORT(P, E, J, K) E
 
 #elif RMCJN0001
@@ -68,7 +68,7 @@
 // Mario Kart Channel Rev 0 [NTSC-J]
 #  define RMCN 1
 
-#  define RMCXD_PORT(P, E, J, K)
+#  define RMCXD_PORT(P, E, J, K, DJ)
 #  define RMCXN_PORT(P, E, J, K) J
 
 #elif RMCKN0001
@@ -76,15 +76,25 @@
 // Mario Kart Channel Rev 0 [NTSC-K]
 #  define RMCN 1
 
-#  define RMCXD_PORT(P, E, J, K)
+#  define RMCXD_PORT(P, E, J, K, DJ)
 #  define RMCXN_PORT(P, E, J, K) K
+
+#elif DABJD00
+
+// Mario Kart Wii Kiosk Demo Rev 0 (NTSC-J)
+
+#  define RMC 1
+
+#  define RMCXD_PORT(P, E, J, K, DJ) DJ
+#  define RMCXN_PORT(P, E, J, K)
+#  define DEMOTODO 0
 
 #endif
 
 #if RMC || RMCN
 
-#  define RMCX_PORT(P, E, J, K, NP, NE, NJ, NK)                                \
-      RMCXD_PORT(P, E, J, K) RMCXN_PORT(NP, NE, NJ, NK)
+#  define RMCX_PORT(P, E, J, K, DJ, NP, NE, NJ, NK)                            \
+      RMCXD_PORT(P, E, J, K, DJ) RMCXN_PORT(NP, NE, NJ, NK)
 
 #endif
 
@@ -93,25 +103,25 @@
 #if RSBED01 | RSBED02
 
 // Super Smash Bros. Brawl Rev 1, Rev 2 [NTSC-U]
-#define RSB 1
-#define RSBX_PORT(E, J, P0, P1) E
+#  define RSB 1
+#  define RSBX_PORT(E, J, P0, P1) E
 
 #elif RSBJD00 | RSBJD01
 
 // Super Smash Bros. Brawl Rev 0, Rev 1 [NTSC-J]
-#define RSB 1
-#define RSBX_PORT(E, J, P0, P1) J
+#  define RSB 1
+#  define RSBX_PORT(E, J, P0, P1) J
 
 #elif RSBPD00
 
 // Super Smash Bros. Brawl Rev 0 [PAL]
-#define RSB 1
-#define RSBX_PORT(E, J, P0, P1) P0
+#  define RSB 1
+#  define RSBX_PORT(E, J, P0, P1) P0
 
 #elif RSBPD01
 
 // Super Smash Bros. Brawl Rev 1 [PAL]
-#define RSB 1
-#define RSBX_PORT(E, J, P0, P1) P1
+#  define RSB 1
+#  define RSBX_PORT(E, J, P0, P1) P1
 
 #endif

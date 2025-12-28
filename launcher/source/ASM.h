@@ -11,7 +11,7 @@
 
 #define r0 %r0
 #define r1 %r1
-#define sp %r1
+#define r1 %r1
 #define r2 %r2
 #define toc %r2
 #define r3 %r3

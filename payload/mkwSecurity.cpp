@@ -1,3 +1,5 @@
+#include "wwfcUtil.h"
+
 #if RMC
 
 #  include "import/mkw/net/eventHandler.hpp"
@@ -40,7 +42,7 @@ static bool IsPacketSizeValid(RacePacket::EType packetType, u8 packetSize)
     std::size_t* packetBufferSizesPointer;
     if (!NetController::Instance()->inVanillaMatch()) {
         extern std::size_t packetBufferSizes[sizeof(RacePacket::sizes)] AT(
-            RMCXD_PORT(0x8089A194, 0x80895AC4, 0x808992F4, 0x808885CC)
+            RMCXD_PORT(0x8089A194, 0x80895AC4, 0x808992F4, 0x808885CC, DEMOTODO)
         );
 
         packetBufferSizesPointer = packetBufferSizes;

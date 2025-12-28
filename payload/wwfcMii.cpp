@@ -1,42 +1,43 @@
-#include "import/mkw/net/userHandler.hpp"
-#include "wwfcGPReport.hpp"
-#include "wwfcLibC.hpp"
-#include "wwfcPatch.hpp"
 #include "wwfcUtil.h"
+
+#if RMC
+
+#  include "import/mkw/net/userHandler.hpp"
+#  include "wwfcGPReport.hpp"
+#  include "wwfcLibC.hpp"
+#  include "wwfcPatch.hpp"
 
 namespace wwfc::Mii
 {
 
-#if RMC
+void ClearUserMiiInfo(mkw::Net::UserHandler::Packet* packet);
 
-void ClearUserMiiInfo(mkw::Net::UserHandler::Packet* packet
-) asm("ClearUserMiiInfo");
-
-WWFC_DEFINE_PATCH = {Patch::CallWithCTR(
+WWFC_DEFINE_PATCH = Patch::CallWithCTR(
     WWFC_PATCH_LEVEL_FEATURE, //
-    RMCXD_PORT(0x80663178, 0x80661094, 0x806627E4, 0x80651490), //
+    RMCXD_PORT(0x80663178, 0x80661094, 0x806627E4, 0x80651490, DEMOTODO), //
     ASM_LAMBDA(
+        ( : ASM_IMPORT(i, ClearUserMiiInfo)),
         // clang-format off
         mflr    r30;
         addi    r3, r31, 0x8;
-        bl      ClearUserMiiInfo;
+        bl      %[ClearUserMiiInfo];
         mtlr    r30;
         // Function epilogue
-        lwz     r31, 0x1C(sp);
-        lwz     r30, 0x18(sp);
-        lwz     r29, 0x14(sp);
-        lwz     r0, 0x24(sp);
+        lwz     r31, 0x1C(r1);
+        lwz     r30, 0x18(r1);
+        lwz     r29, 0x14(r1);
+        lwz     r0, 0x24(r1);
         blr;
         // clang-format on
     )
-)};
+);
 
 static void ClearMiiInfo(RFLiStoreData* miiData)
 {
     // Check if this is a guest "no name" Mii
     LONGCALL bool RFLSearchOfficialData( //
         const RFLCreateID* id, u16* index
-    ) AT(RMCXD_PORT(0x800CA820, 0x800CA780, 0x800CA740, 0x800CA880));
+    ) AT(RMCXD_PORT(0x800CA820, 0x800CA780, 0x800CA740, 0x800CA880, DEMOTODO));
 
     u16 discard;
     if (RFLSearchOfficialData(&miiData->data.createID, &discard)) {
@@ -75,7 +76,7 @@ static void ClearMiiInfo(RFLiStoreData* miiData)
     // Recalculate the CRC16-CCITT checksum
     LONGCALL u16 RFLiCalculateCRC( //
         const void* data, u32 size
-    ) AT(RMCXD_PORT(0x800C78D0, 0x800C7830, 0x800C77F0, 0x800C7930));
+    ) AT(RMCXD_PORT(0x800C78D0, 0x800C7830, 0x800C77F0, 0x800C7930, DEMOTODO));
 
     miiData->checksum = 0;
     miiData->checksum = RFLiCalculateCRC(miiData, sizeof(RFLiStoreData));
@@ -96,6 +97,6 @@ void ClearUserMiiInfo(mkw::Net::UserHandler::Packet* packet)
     );
 }
 
-#endif
-
 } // namespace wwfc::Mii
+
+#endif

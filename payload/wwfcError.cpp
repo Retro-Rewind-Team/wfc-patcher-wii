@@ -11,22 +11,23 @@ namespace wwfc::Error
 void HandleWWFCErrorMessage( //
     GameSpy::GPConnection* connection, GameSpy::GPResult result, int isFatal,
     const char* command
-) asm("HandleWWFCErrorMessage");
+);
 
-WWFC_DEFINE_PATCH = {Patch::CallWithCTR(
+WWFC_DEFINE_PATCH = Patch::CallWithCTR(
     WWFC_PATCH_LEVEL_SUPPORT | WWFC_PATCH_LEVEL_FEATURE, //
     ADDRESS_PATCH_gpiCheckForError, // 0x80108F78
     ASM_LAMBDA(
+        ( : ASM_IMPORT(i, HandleWWFCErrorMessage)),
 // clang-format off
 #if TYPE_gpiCheckForError == 0
         mr      r6, r29;
 #else
         mr      r6, r28;
 #endif
-        b       HandleWWFCErrorMessage;
+        b       %[HandleWWFCErrorMessage];
         // clang-format on
     )
-)};
+);
 
 static int s_wwfcErrorCode = 0;
 #if RMC
@@ -84,19 +85,20 @@ void HandleWWFCErrorMessage(
 #if RMC
 s32 ExplainWWFCError( //
     s32 error, mkw::UI::FormatParam* formatParam
-) asm("ExplainWWFCError");
+);
 
-WWFC_DEFINE_PATCH = {Patch::CallWithCTR(
+WWFC_DEFINE_PATCH = Patch::CallWithCTR(
     WWFC_PATCH_LEVEL_SUPPORT | WWFC_PATCH_LEVEL_FEATURE, //
-    RMCXD_PORT(0x80649C68, 0x80617458, 0x806492D4, 0x80637F80), //
+    RMCXD_PORT(0x80649C68, 0x80617458, 0x806492D4, 0x80637F80, DEMOTODO), //
     ASM_LAMBDA(
+        ( : ASM_IMPORT(i, ExplainWWFCError)),
         // clang-format off
         mflr    r0;
         stw     r0, 0x8(r1);
 
         lwz     r3, 0x18C(r31);
         addi    r4, r1, 0x10;
-        bl      ExplainWWFCError;
+        bl      %[ExplainWWFCError];
         mr      r4, r3;
 
         lwz     r0, 0x8(r1);
@@ -104,13 +106,13 @@ WWFC_DEFINE_PATCH = {Patch::CallWithCTR(
         blr;
         // clang-format on
     )
-)};
+);
 
 s32 ExplainWWFCError(s32 error, mkw::UI::FormatParam* formatParam)
 {
     LONGCALL s32 ExplainDWCError( //
         s32 errorCode
-    ) AT(RMCXD_PORT(0x80649DA4, 0x80617594, 0x80649410, 0x806380BC));
+    ) AT(RMCXD_PORT(0x80649DA4, 0x80617594, 0x80649410, 0x806380BC, DEMOTODO));
 
     if (s_wwfcErrorCode != 0) {
         error = s_wwfcErrorCode;
@@ -131,10 +133,11 @@ u32 SetWWFCErrorCode( //
 ) asm("SetWWFCErrorCode");
 
 // Display the error code for non-Mario Kart Wii
-WWFC_DEFINE_PATCH = {Patch::BranchWithCTR(
+WWFC_DEFINE_PATCH = Patch::BranchWithCTR(
     WWFC_PATCH_LEVEL_SUPPORT | WWFC_PATCH_LEVEL_FEATURE, //
     ADDRESS_PATCH_DWCi_HandleGPError, // 0x800D2E3C
     ASM_LAMBDA(
+        (),
         // clang-format off
         lwz     r29, 0x14(r1);
         mtlr    r0;
@@ -142,7 +145,7 @@ WWFC_DEFINE_PATCH = {Patch::BranchWithCTR(
         b       SetWWFCErrorCode;
         // clang-format on
     )
-)};
+);
 
 u32 SetWWFCErrorCode(u32 ret)
 {

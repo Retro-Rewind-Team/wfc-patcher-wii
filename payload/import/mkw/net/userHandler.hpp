@@ -100,8 +100,9 @@ public:
 
     void calc()
     {
-        LONGCALL void calc(UserHandler * userHandler)
-            AT(RMCXD_PORT(0x806629C0, 0x806608DC, 0x8066202C, 0x80650CD8));
+        LONGCALL void calc(UserHandler * userHandler) AT(
+            RMCXD_PORT(0x806629C0, 0x806608DC, 0x8066202C, 0x80650CD8, DEMOTODO)
+        );
 
         calc(this);
     }
@@ -114,8 +115,9 @@ public:
 private:
     /* 0x000 */ u8 _000[0x9F0 - 0x000];
 
-    static UserHandler* s_instance
-        AT(RMCXD_PORT(0x809C2108, 0x809BD958, 0x809C1168, 0x809B0748));
+    static UserHandler* s_instance AT(
+        RMCXD_PORT(0x809C2108, 0x809BD958, 0x809C1168, 0x809B0748, DEMOTODO)
+    );
 };
 
 static_assert(sizeof(UserHandler) == 0x9F0);

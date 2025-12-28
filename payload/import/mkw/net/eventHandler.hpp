@@ -1,10 +1,11 @@
 #pragma once
 
+#include "wwfcUtil.h"
+
 #if RMC
 
 #  include "import/mkw/item.hpp"
 #  include "wwfcLibC.hpp"
-#  include "wwfcUtil.h"
 
 namespace wwfc::mkw::Net
 {
@@ -169,7 +170,10 @@ public:
     {
         LONGCALL u8 GetEventDataSize(
             u8 itemObject, Packet::EventInfo::EventType eventType
-        ) AT(RMCXD_PORT(0x8079D76C, 0x80794760, 0x8079CDD8, 0x8078BB2C));
+        )
+            AT(RMCXD_PORT(
+                0x8079D76C, 0x80794760, 0x8079CDD8, 0x8078BB2C, DEMOTODO
+            ));
 
         return GetEventDataSize(itemObject, eventType);
     }
@@ -182,8 +186,9 @@ public:
 private:
     /* 0x0000 */ u8 _0000[0x2B88 - 0x0000];
 
-    static EventHandler* s_instance
-        AT(RMCXD_PORT(0x809C20F0, 0x809BD928, 0x809C1150, 0x809B0730));
+    static EventHandler* s_instance AT(
+        RMCXD_PORT(0x809C20F0, 0x809BD928, 0x809C1150, 0x809B0730, DEMOTODO)
+    );
 };
 
 static_assert(sizeof(EventHandler) == 0x2B88);

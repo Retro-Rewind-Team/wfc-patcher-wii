@@ -1,8 +1,8 @@
 #pragma once
 
-#if RMC
+#include <wwfcUtil.h>
 
-#  include <wwfcUtil.h>
+#if RMC
 
 namespace wwfc::mkw::Net
 {
@@ -47,8 +47,9 @@ public:
 private:
     /* 0x000 */ u8 _000[0x260 - 0x000];
 
-    static MatchHeaderHandler* s_instance
-        AT(RMCXD_PORT(0x809C2118, 0x809BD940, 0x809C1178, 0x809B0758));
+    static MatchHeaderHandler* s_instance AT(
+        RMCXD_PORT(0x809C2118, 0x809BD940, 0x809C1178, 0x809B0758, DEMOTODO)
+    );
 };
 
 static_assert(sizeof(MatchHeaderHandler) == 0x260);

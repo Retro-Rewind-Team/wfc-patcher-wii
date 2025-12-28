@@ -26,7 +26,7 @@ private:
     /* 0x04 */ u8 _04[0x9C - 0x04];
 
     static SectionManager* s_instance
-        AT(RMCXD_PORT(0x809C1E38, 0x809BD508, 0x809C0E98, 0x809B0478));
+        AT(RMCXD_PORT(0x809C1E38, 0x809BD508, 0x809C0E98, 0x809B0478, DEMOTODO));
 };
 
 static_assert(sizeof(SectionManager) == 0x9C);

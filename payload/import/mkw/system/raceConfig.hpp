@@ -2,10 +2,10 @@
 
 #include <wwfcUtil.h>
 
+#if RMC
+
 namespace wwfc::mkw::System
 {
-
-#if RMC
 
 class RaceConfig
 {
@@ -78,12 +78,13 @@ private:
     /* 0x0C10 */ Scenario m_menuScenario;
     /* 0x1800 */ u8 _1800[0x73F0 - 0x1800];
 
-    static RaceConfig* s_instance
-        AT(RMCXD_PORT(0x809BD728, 0x809B8F68, 0x809BC788, 0x809ABD68));
+    static RaceConfig* s_instance AT(
+        RMCXD_PORT(0x809BD728, 0x809B8F68, 0x809BC788, 0x809ABD68, DEMOTODO)
+    );
 };
 
 static_assert(sizeof(RaceConfig) == 0x73F0);
 
-#endif
-
 } // namespace wwfc::mkw::System
+
+#endif

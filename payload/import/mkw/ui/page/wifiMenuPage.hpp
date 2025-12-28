@@ -62,12 +62,10 @@ private:
 
 static_assert(sizeof(WifiMenuPage) == 0xF34);
 
-extern "C" {
-__attribute__((__used__)) static void
+inline void
 WifiMenuPage_showMessageOfTheDay(mkw::UI::WifiMenuPage* wifiMenuPage)
 {
     wifiMenuPage->showMessageOfTheDay();
-}
 }
 
 } // namespace wwfc::mkw::UI

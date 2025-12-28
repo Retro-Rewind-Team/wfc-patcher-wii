@@ -43,24 +43,23 @@ constinit const wwfc_payload Header = {
             .signature = {},
         },
     .salt = {},
-    .info =
-        {
-            .format_version = 1,
-            .format_version_compat = 1,
-            .name = WWFC_PAYLOAD_NAME,
-            .version = (WWFC_PAYLOAD_MAJOR << 24) | (WWFC_PAYLOAD_MINOR << 12) |
-                       WWFC_PAYLOAD_BETA,
-            .got_start = &GOTStart,
-            .got_end = &GOTEnd,
-            .fixup_start = &FixupStart,
-            .fixup_end = &FixupEnd,
-            .patch_list_offset = &PatchStart,
-            .patch_list_end = &PatchEnd,
-            .entry_point = &Entry,
-            .entry_point_no_got = &EntryAfterGOT,
-            .reserved = {},
-            .build_timestamp = __TIMESTAMP__,
-        },
+    .info = {
+        .format_version = 1,
+        .format_version_compat = 1,
+        .name = WWFC_PAYLOAD_NAME,
+        .version = (WWFC_PAYLOAD_MAJOR << 24) | (WWFC_PAYLOAD_MINOR << 12) |
+                   WWFC_PAYLOAD_BETA,
+        .got_start = &GOTStart,
+        .got_end = &GOTEnd,
+        .fixup_start = &FixupStart,
+        .fixup_end = &FixupEnd,
+        .patch_list_offset = &PatchStart,
+        .patch_list_end = &PatchEnd,
+        .entry_point = &Entry,
+        .entry_point_no_got = &EntryAfterGOT,
+        .reserved = {},
+        .build_timestamp = __TIMESTAMP__,
+    },
 };
 
 /**
@@ -68,31 +67,31 @@ constinit const wwfc_payload Header = {
  * then calls wwfc_payload_entry_no_got.
  */
 ASM_FUNCTION( //
-    s32 Entry(wwfc_payload* payload),
+    s32 Entry(wwfc_payload* payload), (),
     // clang-format off
     addi    r6, r3, (_G_GOTStart - 4)@l;
     addi    r7, r3, (_G_GOTEnd - 4)@l;
     addi    r8, r3, (_G_FixupEnd - 4)@l;
-L_LoopStart:;
+L%=LoopStart:;
     cmplw   r6, r7;
-    bge-    L_LoopFixupStart;
+    bge-    L%=LoopFixupStart;
     lwzu    r9, 0x4(r6);
     rlwinm. r0, r9, 0, 0x80000000;
-    bne-    L_LoopStart;
+    bne-    L%=LoopStart;
     add     r9, r9, r3;
     stw     r9, 0(r6);
-    b       L_LoopStart;
-L_LoopFixupStart:;
+    b       L%=LoopStart;
+L%=LoopFixupStart:;
     cmplw   r6, r8;
-    bge-    L_LoopFixupEnd;
+    bge-    L%=LoopFixupEnd;
     lwzu    r9, 0x4(r6);
     lwzx    r10, r9, r3;
     rlwinm. r0, r10, 0, 0x80000000;
-    bne-    L_LoopFixupStart;
+    bne-    L%=LoopFixupStart;
     add     r10, r10, r3;
     stwx    r10, r9, r3;
-    b       L_LoopFixupStart;
-L_LoopFixupEnd:;
+    b       L%=LoopFixupStart;
+L%=LoopFixupEnd:;
     b       wwfc_payload_entry_no_got;
     // clang-format on
 )

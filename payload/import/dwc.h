@@ -75,7 +75,7 @@ extern DWCLoginContext* stpLoginCnt AT(ADDRESS_stpLoginCnt);
 #if RMC
 
 LONGCALL int DWC_CloseConnectionHard(u8 playerAid)
-    AT(RMCXD_PORT(0x800D2000, 0x800D1F60, 0x800D1F20, 0x800D2060));
+    AT(RMCXD_PORT(0x800D2000, 0x800D1F60, 0x800D1F20, 0x800D2060, DEMOTODO));
 
 typedef struct {
     /* 0x00 */ u32 profileId;
@@ -87,17 +87,17 @@ static_assert(sizeof(DWCiNodeInfo) == 0x30);
 #  endif
 
 LONGCALL DWCiNodeInfo* DWCi_NodeInfoList_GetNodeInfoForAid(u8 playerAid)
-    AT(RMCXD_PORT(0x800E7EE0, 0x800E7E40, 0x800E7E00, 0x800E7F40));
+    AT(RMCXD_PORT(0x800E7EE0, 0x800E7E40, 0x800E7E00, 0x800E7F40, DEMOTODO));
 
 LONGCALL int DWC_CheckFriendKey(const DWCUserData* userData, u64 friendKey)
-    AT(RMCXD_PORT(0x800EB8D8, 0x800EB838, 0x800EB7F8, 0x800EB950));
+    AT(RMCXD_PORT(0x800EB8D8, 0x800EB838, 0x800EB7F8, 0x800EB950, DEMOTODO));
 
 typedef struct {
     /* 0x0 */ GameSpy::GPConnection* connection;
 } DWCMatchContext;
 
 extern DWCMatchContext*
-    stpMatchCnt AT(RMCXD_PORT(0x8038630C, 0x80381F8C, 0x80385C8C, 0x8037432C));
+    stpMatchCnt AT(RMCXD_PORT(0x8038630C, 0x80381F8C, 0x80385C8C, 0x8037432C, DEMOTODO));
 
 #endif
 
@@ -113,7 +113,7 @@ LONGCALL s32 DWC_Base64Encode( //
 
 LONGCALL s32 DWC_Base64Decode(
     const void* source, u32 sourceSize, char* destination, u32 destinationSize
-) AT(RMCXD_PORT(0x800CC974, 0x800CC8D4, 0x800CC894, 0x800CC9D4));
+) AT(RMCXD_PORT(0x800CC974, 0x800CC8D4, 0x800CC894, 0x800CC9D4, DEMOTODO));
 
 #endif
 
