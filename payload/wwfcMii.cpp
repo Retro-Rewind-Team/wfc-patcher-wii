@@ -1,5 +1,3 @@
-#include "wwfcUtil.h"
-
 #if RMC
 
 #  include "import/mkw/net/userHandler.hpp"
@@ -35,7 +33,7 @@ WWFC_DEFINE_PATCH = Patch::CallWithCTR(
 static void ClearMiiInfo(RFLiStoreData* miiData)
 {
     // Check if this is a guest "no name" Mii
-    LONGCALL bool RFLSearchOfficialData( //
+    [[gnu::longcall]] bool RFLSearchOfficialData( //
         const RFLCreateID* id, u16* index
     ) AT(RMCXD_PORT(0x800CA820, 0x800CA780, 0x800CA740, 0x800CA880, DEMOTODO));
 
@@ -74,7 +72,7 @@ static void ClearMiiInfo(RFLiStoreData* miiData)
     miiData->data.birthDay = 0;
 
     // Recalculate the CRC16-CCITT checksum
-    LONGCALL u16 RFLiCalculateCRC( //
+    [[gnu::longcall]] u16 RFLiCalculateCRC( //
         const void* data, u32 size
     ) AT(RMCXD_PORT(0x800C78D0, 0x800C7830, 0x800C77F0, 0x800C7930, DEMOTODO));
 

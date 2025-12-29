@@ -1,6 +1,6 @@
 #include "wwfcPatch.hpp"
 #include <import/revolution.h>
-#include <wwfcCommon.h>
+#include <wwfcTypes.h>
 
 namespace wwfc::Patch
 {

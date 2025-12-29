@@ -4,7 +4,6 @@
 
 #  include "import/mkw/ui/ui.hpp"
 #  include "page.hpp"
-#  include <wwfcUtil.h>
 
 namespace wwfc::mkw::UI
 {
@@ -52,7 +51,7 @@ public:
 
     void setWindowMessage(u32 messageId, FormatParam* formatParam = nullptr)
     {
-        LONGCALL void setWindowMessage(
+        [[gnu::longcall]] void setWindowMessage(
             YesNoPage * yesNoPage, u32 messageId,
             FormatParam* formatParam = nullptr
         )
@@ -68,7 +67,7 @@ public:
         IHandler* handler
     )
     {
-        LONGCALL void configureButton(
+        [[gnu::longcall]] void configureButton(
             YesNoPage * yesNoPage, u32 index, u32 messageId,
             FormatParam * formatParam, Animation animation, IHandler * handler
         )

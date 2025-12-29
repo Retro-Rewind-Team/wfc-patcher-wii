@@ -2,7 +2,7 @@
 
 #if RMC
 
-#  include <wwfcCommon.h>
+#  include <wwfcTypes.h>
 
 // https://github.com/MelgMKW/Pulsar/blob/main/GameSource/MarioKartWii/3D/Model/AnmHolder.hpp
 namespace wwfc::mkw::Model

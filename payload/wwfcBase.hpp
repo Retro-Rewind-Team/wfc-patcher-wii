@@ -1,9 +1,19 @@
 #pragma once
 
-#include <wwfcCommon.h>
+#include <wwfcInteger.h>
 
-#define SECTION(_SECTION) __attribute__((__section__(_SECTION)))
-#define LONGCALL __attribute__((__longcall__))
+namespace wwfc
+{
+
+using s8 = wwfc_int8_t;
+using s16 = wwfc_int16_t;
+using s32 = wwfc_int32_t;
+using s64 = wwfc_int64_t;
+using u8 = wwfc_uint8_t;
+using u16 = wwfc_uint16_t;
+using u32 = wwfc_uint32_t;
+using u64 = wwfc_uint64_t;
+
 #define PACKED __attribute__((__packed__))
 
 #define FILL(_START, _END) u8 _##_START[_END - _START]
@@ -125,3 +135,5 @@
 #  define RSBX_PORT(E, J, P0, P1) P1
 
 #endif
+
+} // namespace wwfc

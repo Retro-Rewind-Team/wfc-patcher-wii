@@ -3,7 +3,6 @@
 #if RMC
 
 #  include "menuInputManager.hpp"
-#  include <wwfcUtil.h>
 
 namespace wwfc::mkw::UI
 {
@@ -17,7 +16,7 @@ public:
         bool register7 = false
     )
     {
-        LONGCALL void setHandler(
+        [[gnu::longcall]] void setHandler(
             MultiControlInputManager * multiControlInputManager,
             InputType inputType, IHandler * handler, bool register6 = false,
             bool register7 = false

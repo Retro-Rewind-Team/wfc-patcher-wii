@@ -1,10 +1,9 @@
-#include "wwfcUtil.h"
-
 #if RMC
 
 #  include "import/mkw/net/net.hpp"
 #  include "import/mkw/system/raceConfig.hpp"
 #  include "wwfcPatch.hpp"
+#  include "wwfcPayload.hpp"
 
 namespace wwfc::BugFix
 {
@@ -72,10 +71,14 @@ u64 IsUltraShortcutCheckEnabled(u32 r3Discard, u32 r4Save)
 
     auto raceConfig = mkw::System::RaceConfig::Instance();
     if (raceConfig->raceScenario().isOnlineVersusRace()) {
-        // Check if Worldwide or other vanilla match
-        auto netController = mkw::Net::NetController::Instance();
-        if (netController && netController->inVanillaMatch()) {
-            enabled = true;
+        if (Payload::g_enableUltraUncut == WWFC_BOOLEAN_RESET) {
+            // Check if Worldwide or other vanilla match
+            auto netController = mkw::Net::NetController::Instance();
+            if (netController && netController->inVanillaMatch()) {
+                enabled = true;
+            }
+        } else {
+            enabled = Payload::g_enableUltraUncut != WWFC_BOOLEAN_FALSE;
         }
     }
 

@@ -1,18 +1,19 @@
-#include "wwfcUtil.h"
-
 #if RMC
 
 #  include "import/mkw/net/eventHandler.hpp"
 #  include "import/mkw/net/itemHandler.hpp"
 #  include "import/mkw/net/matchHeaderHandler.hpp"
+#  include "import/mkw/net/net.hpp"
 #  include "import/mkw/net/roomHandler.hpp"
 #  include "import/mkw/net/selectHandler.hpp"
 #  include "import/mkw/net/userHandler.hpp"
 #  include "import/mkw/registry.hpp"
 #  include "import/mkw/system/raceConfig.hpp"
 #  include "import/mkw/system/system.hpp"
+#  include "wwfcTypes.h"
 #  include "wwfcLibC.hpp"
 #  include "wwfcLog.hpp"
+#  include "wwfcPayload.hpp"
 
 namespace wwfc::mkw::Security
 {
@@ -40,7 +41,7 @@ static bool IsPacketSizeValid(RacePacket::EType packetType, u8 packetSize)
     }
 
     std::size_t* packetBufferSizesPointer;
-    if (!NetController::Instance()->inVanillaMatch()) {
+    if (!NetController::Instance()->isEnableAggressivePacketChecks()) {
         extern std::size_t packetBufferSizes[sizeof(RacePacket::sizes)] AT(
             RMCXD_PORT(0x8089A194, 0x80895AC4, 0x808992F4, 0x808885CC, DEMOTODO)
         );
@@ -145,14 +146,15 @@ static bool IsMatchHeaderPacketDataValid(
     const MatchHeaderHandler::Packet* matchHeaderPacket =
         reinterpret_cast<const MatchHeaderHandler::Packet*>(packet);
 
-    if (!NetController::Instance()->inVanillaRaceScene()) {
+    if (wwfc::Payload::g_enableAggressivePacketChecks == WWFC_BOOLEAN_FALSE ||
+        (wwfc::Payload::g_enableAggressivePacketChecks == WWFC_BOOLEAN_RESET &&
+         !NetController::Instance()->inVanillaRaceScene())) {
         return true;
     }
 
     RaceConfig::Scenario* scenario = &RaceConfig::Instance()->raceScenario();
 
-    for (std::size_t n = 0;
-         n < ARRAY_ELEMENT_COUNT(MatchHeaderHandler::Packet::player); n++) {
+    for (std::size_t n = 0; n < std::size(matchHeaderPacket->player); n++) {
         MatchHeaderHandler::Packet::Player player =
             matchHeaderPacket->player[n];
 
@@ -225,7 +227,7 @@ IsRoomSelectPacketDataValid(const void* packet, u8 packetSize, u8 playerAid)
     }
     // 'Select' packet
     else {
-        if (!NetController::Instance()->inVanillaMatch()) {
+        if (!NetController::Instance()->isEnableAggressivePacketChecks()) {
             return true;
         }
 
@@ -240,8 +242,7 @@ IsRoomSelectPacketDataValid(const void* packet, u8 packetSize, u8 playerAid)
 
         const SelectHandler::Packet* selectPacket =
             reinterpret_cast<const SelectHandler::Packet*>(packet);
-        for (std::size_t n = 0;
-             n < ARRAY_ELEMENT_COUNT(SelectHandler::Packet::player); n++) {
+        for (std::size_t n = 0; n < std::size(selectPacket->player); n++) {
             SelectHandler::Packet::Player player = selectPacket->player[n];
 
             SelectHandler::Packet::Player::Character selectedCharacter =
@@ -333,7 +334,9 @@ IsItemPacketDataValid(const void* packet, u8 packetSize, u8 /* playerAid */)
     using namespace mkw::Item;
     using namespace mkw::System;
 
-    if (!NetController::Instance()->inVanillaRaceScene()) {
+    if (wwfc::Payload::g_enableAggressivePacketChecks == WWFC_BOOLEAN_FALSE ||
+        (wwfc::Payload::g_enableAggressivePacketChecks == WWFC_BOOLEAN_RESET &&
+         !NetController::Instance()->inVanillaRaceScene())) {
         return true;
     }
 
@@ -401,14 +404,18 @@ IsEventPacketDataValid(const void* packet, u8 packetSize, u8 playerAid)
 
     const EventHandler::Packet* eventPacket =
         reinterpret_cast<const EventHandler::Packet*>(packet);
+    const bool packetChecks =
+        NetController::Instance()->isEnableAggressivePacketChecks();
 
     // Always ensure that the packet does not contain any invalid item
     // objects, as this can cause a buffer overflow to occur.
-    if (eventPacket->containsInvalidItemObject()) {
-        return false;
+    if (wwfc::Payload::g_enableEventItemIdCheck || packetChecks) {
+        if (eventPacket->containsInvalidItemObject()) {
+            return false;
+        }
     }
 
-    if (!NetController::Instance()->inVanillaMatch()) {
+    if (!packetChecks) {
         return true;
     }
 
@@ -440,7 +447,7 @@ bool IsRacePacketValid(
     }
 
     u32 expectedPacketSize = 0;
-    for (std::size_t n = 0; n < ARRAY_ELEMENT_COUNT(RacePacket::sizes); n++) {
+    for (std::size_t n = 0; n < std::size(racePacket->sizes); n++) {
         RacePacket::EType packetType = static_cast<RacePacket::EType>(n);
         u8 packetSize = racePacket->sizes[n];
 
@@ -463,7 +470,7 @@ bool IsRacePacketValid(
     }
 
     expectedPacketSize = 0;
-    for (std::size_t n = 0; n < ARRAY_ELEMENT_COUNT(RacePacket::sizes); n++) {
+    for (std::size_t n = 0; n < std::size(racePacket->sizes); n++) {
         const IsPacketDataValid isPacketDataValid = s_isPacketDataValid[n];
         const void* packet =
             reinterpret_cast<const char*>(racePacket) + expectedPacketSize;

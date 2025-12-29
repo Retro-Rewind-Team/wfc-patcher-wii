@@ -1,7 +1,5 @@
 #pragma once
 
-#include "wwfcUtil.h"
-
 #if RMC
 
 #  include "import/mkw/item.hpp"

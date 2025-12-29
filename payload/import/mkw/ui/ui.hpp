@@ -2,7 +2,7 @@
 
 #if RMC
 
-#  include <wwfcCommon.h>
+#  include <wwfcTypes.h>
 
 namespace wwfc::mkw::UI
 {

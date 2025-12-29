@@ -1,5 +1,3 @@
-#include "wwfcUtil.h"
-
 #include "mkwSecurity.hpp"
 #include "wwfcLog.hpp"
 #include "wwfcPatch.hpp"
@@ -137,7 +135,7 @@ WWFC_DEFINE_PATCH = Patch::BranchWithCTR( //
         return;
     }
 
-    LONGCALL u32 NETCalcCRC32( //
+    [[gnu::longcall]] u32 NETCalcCRC32( //
         const void* data, u32 size
     ) AT(RMCXD_PORT(0x801D1CA0, 0x801D1C00, 0x801D1BC0, 0x801D1FFC, DEMOTODO));
 

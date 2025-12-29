@@ -25,3 +25,5 @@
 -DADDRESS_PATCH_GPIADDLOCALINFO=0x801021C0
 -x
 c++
+-include
+wwfcBase.hpp

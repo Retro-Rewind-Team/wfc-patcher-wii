@@ -1,6 +1,6 @@
 #pragma once
 
-#include <wwfcCommon.h>
+#include <wwfcTypes.h>
 
 namespace wwfc::EGG
 {

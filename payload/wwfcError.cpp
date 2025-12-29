@@ -3,7 +3,7 @@
 #include "import/mkw/ui/ui.hpp"
 #include "wwfcLibC.hpp"
 #include "wwfcPatch.hpp"
-#include "wwfcUtil.h"
+
 
 namespace wwfc::Error
 {
@@ -39,7 +39,7 @@ void HandleWWFCErrorMessage(
     const char* command
 )
 {
-    LONGCALL int atoi( //
+    [[gnu::longcall]] int atoi( //
         const char* str
     ) AT(ADDRESS_atoi);
 
@@ -110,7 +110,7 @@ WWFC_DEFINE_PATCH = Patch::CallWithCTR(
 
 s32 ExplainWWFCError(s32 error, mkw::UI::FormatParam* formatParam)
 {
-    LONGCALL s32 ExplainDWCError( //
+    [[gnu::longcall]] s32 ExplainDWCError( //
         s32 errorCode
     ) AT(RMCXD_PORT(0x80649DA4, 0x80617594, 0x80649410, 0x806380BC, DEMOTODO));
 

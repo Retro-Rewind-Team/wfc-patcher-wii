@@ -1,9 +1,11 @@
+#include "wwfcPayload.hpp"
 #include "wwfcLogin.hpp"
 #include "wwfcPatch.hpp"
 #include "wwfcSupport.hpp"
-#include "wwfcUtil.h"
+#include "wwfcTypes.h"
 #include "wwfcVersion.h"
 #include <wwfcError.h>
+#include <wwfcTypes.h>
 
 namespace wwfc::Payload
 {
@@ -22,6 +24,8 @@ s32 Entry(wwfc_payload* payload) asm("wwfc_payload_entry");
  */
 s32 EntryAfterGOT(wwfc_payload* payload) asm("wwfc_payload_entry_no_got");
 
+s32 FunctionExec(wwfc_function_t function, ...) asm("wwfc_function_exec");
+
 // Symbols provided in the linker script
 extern u32 GOTStart asm("_G_GOTStart");
 extern u32 GOTEnd asm("_G_GOTEnd");
@@ -33,8 +37,8 @@ extern u32 CTORSStart asm("__CTORS_START__");
 extern u32 CTORSEnd asm("__CTORS_END__");
 extern u8 PayloadEnd asm("_G_End");
 
-SECTION("wwfc_header")
-constinit const wwfc_payload Header = {
+[[gnu::section("wwfc_header")]]
+constinit const wwfc_payload_ex Header = {
     .header =
         {
             .magic =
@@ -57,7 +61,8 @@ constinit const wwfc_payload Header = {
         .patch_list_end = &PatchEnd,
         .entry_point = &Entry,
         .entry_point_no_got = &EntryAfterGOT,
-        .reserved = {},
+        .function_exec = &FunctionExec,
+        .must_be_zero = {},
         .build_timestamp = __TIMESTAMP__,
     },
 };
@@ -154,6 +159,73 @@ s32 EntryAfterGOT(wwfc_payload* payload)
     Login::Init();
 
     return WL_ERROR_PAYLOAD_OK;
+}
+
+s32 FunctionExec(wwfc_function_t function, ...)
+{
+    __builtin_va_list args;
+    __builtin_va_start(args, function);
+
+    switch (function) {
+    case WWFC_FUNCTION_APPLY_PATCH: {
+        wwfc_patch* patch = __builtin_va_arg(args, wwfc_patch*);
+
+        Patch::ApplyPatch(reinterpret_cast<u32>(&Header), *patch);
+        return 0;
+    }
+
+    case WWFC_FUNCTION_GET_VALUE: {
+        const wwfc_key_t key = __builtin_va_arg(args, wwfc_key_t);
+
+        switch (key) {
+#define CASE(_KEY, _VALUE)                                                     \
+    case _KEY:                                                                 \
+        return _VALUE
+
+            CASE(
+                WWFC_KEY_ENABLE_AGGRESSIVE_PACKET_CHECKS,
+                g_enableAggressivePacketChecks
+            );
+#if RMC
+            CASE(
+                WWFC_KEY_MKW_ENABLE_EVENT_ITEM_ID_CHECK,
+                g_enableEventItemIdCheck
+            );
+            CASE(WWFC_KEY_MKW_ENABLE_ULTRA_UNCUT, g_enableUltraUncut);
+#endif
+#undef CASE
+        }
+        return -1;
+    }
+
+    case WWFC_FUNCTION_SET_VALUE: {
+        const wwfc_key_t key = __builtin_va_arg(args, wwfc_key_t);
+
+        switch (key) {
+#define CASE(_KEY, _VALUE)                                                     \
+    case _KEY:                                                                 \
+        _VALUE =                                                               \
+            __builtin_va_arg(args, std::remove_cvref_t<decltype(_VALUE)>);     \
+        return 0
+
+            CASE(
+                WWFC_KEY_ENABLE_AGGRESSIVE_PACKET_CHECKS,
+                g_enableAggressivePacketChecks
+            );
+#if RMC
+            CASE(
+                WWFC_KEY_MKW_ENABLE_EVENT_ITEM_ID_CHECK,
+                g_enableEventItemIdCheck
+            );
+            CASE(WWFC_KEY_MKW_ENABLE_ULTRA_UNCUT, g_enableUltraUncut);
+#endif
+#undef CASE
+        }
+        return -1;
+    }
+    }
+
+    return -1;
 }
 
 } // namespace wwfc::Payload

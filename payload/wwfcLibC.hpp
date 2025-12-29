@@ -1,6 +1,5 @@
 #pragma once
 
-#include <wwfcUtil.h>
 
 #ifdef WWFC_HAVE_LIBC
 #  include <stddef.h>
@@ -59,6 +58,7 @@ char* strncpy(char* __restrict dst, const char* __restrict src, size_t n);
 #  include <array>
 #  include <bit>
 #  include <iterator>
+#  include <type_traits>
 
 namespace wwfc::std
 {
@@ -66,8 +66,11 @@ namespace wwfc::std
 using ::std::array;
 using ::std::countr_one;
 using ::std::difference;
+using ::std::is_enum_v;
+using ::std::is_same_v;
 using ::std::max;
 using ::std::min;
+using ::std::remove_cvref_t;
 using ::std::size;
 
 } // namespace wwfc::std
@@ -243,6 +246,49 @@ public:
 public:
     value_type m_data[N] = {};
 };
+
+template <class T>
+concept is_enum_v = __is_enum(T);
+
+template <class T, class U>
+concept is_same_v = __is_same_as(T, U);
+
+template <class T>
+struct identity {
+    using type = T;
+};
+
+template <class T>
+struct remove_reference : identity<T> {
+};
+
+template <class T>
+struct remove_reference<T&> : identity<T> {
+};
+
+template <class T>
+struct remove_reference<T&&> : identity<T> {
+};
+
+template <class T>
+struct remove_const : identity<T> {
+};
+
+template <class T>
+struct remove_const<const T> : identity<T> {
+};
+
+template <class T>
+struct remove_volatile : identity<T> {
+};
+
+template <class T>
+struct remove_volatile<volatile T> : identity<T> {
+};
+
+template <class T>
+using remove_cvref_t = typename remove_const<
+    typename remove_volatile<typename remove_reference<T>::type>::type>::type;
 
 } // namespace wwfc::std
 #endif // !WWFC_HAVE_LIBCPP

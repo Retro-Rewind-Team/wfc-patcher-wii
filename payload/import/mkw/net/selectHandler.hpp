@@ -70,7 +70,7 @@ public:
 
     void decideCourse()
     {
-        LONGCALL void decideCourse(SelectHandler * selectHandler) AT(
+        [[gnu::longcall]] void decideCourse(SelectHandler * selectHandler) AT(
             RMCXD_PORT(0x80661CE8, 0x80659DAC, 0x80661354, 0x80650000, DEMOTODO)
         );
 
@@ -79,7 +79,7 @@ public:
 
     void initPlayerIdsToPlayerAids()
     {
-        LONGCALL void initPlayerIdsToPlayerAids(SelectHandler * selectHandler)
+        [[gnu::longcall]] void initPlayerIdsToPlayerAids(SelectHandler * selectHandler)
             AT(RMCXD_PORT(
                 0x80662034, 0x8065A0F8, 0x806616A0, 0x8065034C, DEMOTODO
             ));

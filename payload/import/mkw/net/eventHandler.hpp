@@ -1,7 +1,5 @@
 #pragma once
 
-#include "wwfcUtil.h"
-
 #if RMC
 
 #  include "import/mkw/item.hpp"
@@ -168,7 +166,7 @@ public:
     static u8
     GetEventDataSize(u8 itemObject, Packet::EventInfo::EventType eventType)
     {
-        LONGCALL u8 GetEventDataSize(
+        [[gnu::longcall]] u8 GetEventDataSize(
             u8 itemObject, Packet::EventInfo::EventType eventType
         )
             AT(RMCXD_PORT(

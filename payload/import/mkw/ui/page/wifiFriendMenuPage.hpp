@@ -12,7 +12,7 @@ class WifiFriendMenuPage : public OpenHostPage
 public:
     void onActivate() override
     {
-        LONGCALL void onActivate(WifiFriendMenuPage * wifiFriendMenuPage) AT(
+        [[gnu::longcall]] void onActivate(WifiFriendMenuPage * wifiFriendMenuPage) AT(
             RMCXD_PORT(0x8064CF18, 0x80619C04, 0x8064C584, 0x8063B230, DEMOTODO)
         );
 
@@ -23,7 +23,7 @@ public:
 
     void onDeactivate() override
     {
-        LONGCALL void onDeactivate(WifiFriendMenuPage * wifiFriendMenuPage) AT(
+        [[gnu::longcall]] void onDeactivate(WifiFriendMenuPage * wifiFriendMenuPage) AT(
             RMCXD_PORT(0x8064CFF8, 0x80619CE4, 0x8064C664, 0x8063B310, DEMOTODO)
         );
 
@@ -34,7 +34,7 @@ public:
 
     void onRefocus() override
     {
-        LONGCALL void Page_onRefocus(Page * page) AT(
+        [[gnu::longcall]] void Page_onRefocus(Page * page) AT(
             RMCXD_PORT(0x805BB228, 0x805B5668, 0x805BABA8, 0x805A9280, DEMOTODO)
         );
 

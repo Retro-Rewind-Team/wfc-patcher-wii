@@ -1,13 +1,12 @@
 #pragma once
 
-#include <wwfcUtil.h>
-
 #if RMC
 
 #  include "import/dwc.h"
 #  include "import/mkw/hostSystem.hpp"
 #  include "import/mkw/system/system.hpp"
 #  include <wwfcGPReport.hpp>
+#  include <wwfcPayload.hpp>
 
 namespace wwfc::mkw::Net
 {
@@ -51,7 +50,7 @@ public:
 
     void sendRacePacket()
     {
-        LONGCALL void sendRacePacket(NetController * netController) AT(
+        [[gnu::longcall]] void sendRacePacket(NetController * netController) AT(
             RMCXD_PORT(0x80657E30, 0x806539A8, 0x8065749C, 0x80646148, DEMOTODO)
         );
 
@@ -61,7 +60,7 @@ public:
     void
     processRacePacket(u32 playerAid, RacePacket* racePacket, u32 packetSize)
     {
-        LONGCALL void processRacePacket(
+        [[gnu::longcall]] void processRacePacket(
             NetController * netController, u32 playerAid,
             RacePacket * racePacket, u32 packetSize
         )
@@ -142,6 +141,17 @@ public:
         default:
             return false;
         }
+    }
+
+    bool isEnableAggressivePacketChecks() const
+    {
+        if (wwfc::Payload::g_enableAggressivePacketChecks !=
+            WWFC_BOOLEAN_RESET) {
+            return wwfc::Payload::g_enableAggressivePacketChecks !=
+                   WWFC_BOOLEAN_FALSE;
+        }
+
+        return inVanillaMatch();
     }
 
     bool inVanillaRaceScene() const

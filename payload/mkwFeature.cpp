@@ -1,5 +1,3 @@
-#include "wwfcUtil.h"
-
 #if RMC
 
 #  include "import/mkw/net/selectHandler.hpp"

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <wwfcUtil.h>
-
 #if RMC
 
 namespace wwfc::mkw::System

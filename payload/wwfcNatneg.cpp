@@ -1,7 +1,7 @@
 #include "import/gamespy.h"
 #include "import/revolution.h"
 #include "wwfcPatch.hpp"
-#include "wwfcUtil.h"
+
 
 namespace wwfc::Natneg
 {

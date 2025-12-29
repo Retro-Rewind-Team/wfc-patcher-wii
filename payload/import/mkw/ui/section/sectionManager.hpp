@@ -3,7 +3,6 @@
 #if RMC
 
 #  include "section.hpp"
-#  include <wwfcUtil.h>
 
 namespace wwfc::mkw::UI
 {

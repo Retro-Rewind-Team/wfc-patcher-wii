@@ -1,11 +1,9 @@
 #pragma once
 
-#include <wwfcUtil.h>
-
 #ifdef __cplusplus
 extern "C" {
 
-namespace RVL
+namespace wwfc::RVL
 {
 #endif
 
@@ -23,23 +21,23 @@ typedef enum {
     SCLanguageCount,
 } SCLanguage;
 
-LONGCALL bool OSDisableInterrupts( //
+[[gnu::longcall]] bool OSDisableInterrupts( //
     void
 ) AT(ADDRESS_OSDisableInterrupts);
 
-LONGCALL void OSRestoreInterrupts( //
+[[gnu::longcall]] void OSRestoreInterrupts( //
     bool enabled
 ) AT(ADDRESS_OSRestoreInterrupts);
 
-LONGCALL void OSReport( //
+[[gnu::longcall]] void OSReport( //
     const char* format, ...
 ) AT(ADDRESS_OSReport);
 
-LONGCALL void DCFlushRange( //
+[[gnu::longcall]] void DCFlushRange( //
     void* ptr, u32 size
 ) AT(ADDRESS_DCFlushRange);
 
-LONGCALL void ICInvalidateRange( //
+[[gnu::longcall]] void ICInvalidateRange( //
     void* ptr, u32 size
 ) AT(ADDRESS_ICInvalidateRange);
 
@@ -48,27 +46,27 @@ typedef struct {
     u32 size;
 } IOVector;
 
-LONGCALL s32 IOS_Open( //
+[[gnu::longcall]] s32 IOS_Open( //
     const char* path, u32 flags
 ) AT(ADDRESS_IOS_Open);
 
-LONGCALL s32 IOS_Close( //
+[[gnu::longcall]] s32 IOS_Close( //
     s32 fd
 ) AT(ADDRESS_IOS_Close);
 
-LONGCALL s32 IOS_Ioctlv( //
+[[gnu::longcall]] s32 IOS_Ioctlv( //
     s32 fd, u32 cmd, u32 in_count, u32 out_count, IOVector* vec
 ) AT(ADDRESS_IOS_Ioctlv);
 
 #if RMC
 
-LONGCALL u8 SCGetLanguage( //
+[[gnu::longcall]] u8 SCGetLanguage( //
     void
 ) AT(RMCXD_PORT(0x801B1D0C, 0x801B1C6C, 0x801B1C2C, 0x801B2068, DEMOTODO));
 
 #endif // RMC
 
-LONGCALL bool SCGetProductSN( //
+[[gnu::longcall]] bool SCGetProductSN( //
     u32* serial
 ) AT(ADDRESS_SCGetProductSN);
 

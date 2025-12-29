@@ -2,7 +2,6 @@
 
 #if RMC
 
-#  include <wwfcUtil.h>
 
 namespace wwfc::mkw::Net
 {

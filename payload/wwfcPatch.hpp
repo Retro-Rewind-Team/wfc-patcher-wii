@@ -2,7 +2,7 @@
 
 #include "wwfcLibC.hpp"
 #include <wwfcAsm.h>
-#include <wwfcCommon.h>
+#include <wwfcTypes.h>
 
 namespace wwfc::Patch
 {
@@ -19,7 +19,7 @@ struct [[gnu::packed]] PatchEntry {
     T1 arg1;
 };
 
-void ApplyPatch(u32 base, const wwfc_patch& patch);
+void ApplyPatch(u32 base, wwfc_patch& patch);
 void ApplyPatchList(u32 base, wwfc_patch* patches, u32 patchCount);
 
 template <class T, u32 N>
