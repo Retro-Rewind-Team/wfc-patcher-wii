@@ -5,6 +5,8 @@
 #define AT_EXPANDED(_ADDRESS) asm(#_ADDRESS)
 #define AT(_ADDRESS) AT_EXPANDED(_ADDRESS)
 
+#define SHA256_DIGEST_SIZE 32
+
 using s8 = wwfc_int8_t;
 using s16 = wwfc_int16_t;
 using s32 = wwfc_int32_t;
@@ -178,7 +180,6 @@ private:
     // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
     // THE POSSIBILITY OF SUCH DAMAGE.
 
-#define SHA256_DIGEST_SIZE 32
 #define SHA256_BLOCK_SIZE 64
 
     /* SHA256 context */
