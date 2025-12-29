@@ -48,7 +48,7 @@ constinit const wwfc_payload_ex Header = {
         },
     .salt = {},
     .info = {
-        .format_version = 1,
+        .format_version = 2,
         .format_version_compat = 1,
         .name = WWFC_PAYLOAD_NAME,
         .version = (WWFC_PAYLOAD_MAJOR << 24) | (WWFC_PAYLOAD_MINOR << 12) |

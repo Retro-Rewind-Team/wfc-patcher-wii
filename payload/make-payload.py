@@ -7,9 +7,11 @@ path_cc = os.path.join(devkitppc, "bin", "powerpc-eabi-gcc")
 path_objcopy = os.path.join(devkitppc, "bin", "powerpc-eabi-objcopy")
 
 extra_build_flags = []
+silent = False
 
 def build(game):
-    print(game["Title"])
+    if not silent:
+        print(game["Title"])
 
     flags = []
     flags.append("-D" + game["Title"] + "=1")
@@ -71,6 +73,8 @@ if __name__ == "__main__":
             title_id = argv[i][2:]
         elif argv[i].startswith("-D"):
             extra_build_flags.append(argv[i])
+        elif argv[i] == "-s":
+            silent = True
 
     if title_id != "":
         map_game_list = []
