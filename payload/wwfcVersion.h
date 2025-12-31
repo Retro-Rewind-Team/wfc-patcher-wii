@@ -11,3 +11,11 @@ static_assert(
         WWFC_PAYLOAD_BETA < 4096,
     "Payload version numbers are too large"
 );
+
+#define WWFC_VERSION_STRING_HELPER(_MAJOR, _MINOR, _BETA)                      \
+    #_MAJOR "." #_MINOR "." #_BETA
+
+#define WWFC_VERSION_STRING                                                    \
+    WWFC_VERSION_STRING_HELPER(                                                \
+        WWFC_PAYLOAD_MAJOR, WWFC_PAYLOAD_MINOR, WWFC_PAYLOAD_BETA              \
+    )

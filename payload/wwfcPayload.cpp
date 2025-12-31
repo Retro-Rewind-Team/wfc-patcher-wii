@@ -1,4 +1,6 @@
 #include "wwfcPayload.hpp"
+#include "import/revolution.h"
+#include "wwfcLog.hpp"
 #include "wwfcLogin.hpp"
 #include "wwfcPatch.hpp"
 #include "wwfcSupport.hpp"
@@ -147,6 +149,11 @@ s32 EntryAfterGOT(wwfc_payload* payload)
     }
 #  endif
 #endif
+
+    WWFC_LOG_NOTICE_FMT(
+        "Payload version %u.%u.%u", payload->info.version >> 24,
+        (payload->info.version >> 12) & 0xFFF, payload->info.version & 0xFFF
+    );
 
     CallCtors(payload);
 
