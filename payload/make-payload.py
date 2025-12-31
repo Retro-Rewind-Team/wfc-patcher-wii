@@ -21,9 +21,9 @@ def build(game):
     flags.append("-DWWFC_GAME_ID=0x" + title_str[:4].encode("ascii").hex() + "")
 
     if title_str[4] == 'D':
-        flags.append("-DWWFC_TITLE_TYPE=TITLE_TYPE_DISC")
+        flags.append("-DWWFC_TITLE_TYPE=WWFC_TITLE_TYPE_DISC")
     else:
-        flags.append("-DWWFC_TITLE_TYPE=TITLE_TYPE_NAND")
+        flags.append("-DWWFC_TITLE_TYPE=WWFC_TITLE_TYPE_NAND")
 
     flags.append("-DWWFC_TITLE_VERSION=0x" + title_str[5:])
 

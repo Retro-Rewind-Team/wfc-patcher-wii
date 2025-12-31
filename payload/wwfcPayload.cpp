@@ -132,7 +132,7 @@ static void CallCtors(const wwfc_payload* const payload)
  */
 s32 EntryAfterGOT(wwfc_payload* payload)
 {
-#if TITLE_TYPE == TITLE_TYPE_DISC
+#if WWFC_TITLE_TYPE == WWFC_TITLE_TYPE_DISC
     // Verify that the current game is the one this payload is built for
     if (g_LoMem.discId != WWFC_GAME_ID) {
         return WL_ERROR_PAYLOAD_GAME_MISMATCH;
