@@ -5,16 +5,16 @@
 namespace wwfc::Security
 {
 
-WWFC_DEFINE_PATCH = {
 #if ADDRESS_DWCi_GetGPBuddyAdditionalMsg
-    // SERVER TO CLIENT VULNERABILITY
-    // CVE-ID: CVE-2023-45887
-    // https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-45887
-    Patch::CallWithCTR(
-        WWFC_PATCH_LEVEL_CRITICAL, //
-        ADDRESS_DWCi_GetGPBuddyAdditionalMsg + 0x90, //
-        ASM_LAMBDA(
-            // clang-format off
+// SERVER TO CLIENT VULNERABILITY
+// CVE-ID: CVE-2023-45887
+// https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-45887
+WWFC_DEFINE_PATCH = Patch::CallWithCTR(
+    WWFC_PATCH_LEVEL_CRITICAL, //
+    ADDRESS_DWCi_GetGPBuddyAdditionalMsg + 0x90, //
+    ASM_LAMBDA(
+        (),
+        // clang-format off
             cmplwi    r31, 0xF; // The destination buffer is of size 0x10; leave room for the null terminator
             mflr      r9;
             mr        r5, r31;
@@ -28,24 +28,24 @@ WWFC_DEFINE_PATCH = {
 
         L_ValidLength:
             b         memcpy;
-            // clang-format on
-        )
-    ),
+        // clang-format on
+    )
+);
 #endif
-};
 
 // SERVER|CLIENT TO CLIENT VULNERABILITY
 // Match command stack buffer overflow. This exists in nearly every Wii game.
-WWFC_DEFINE_PATCH = {
+
 #if ADDRESS_PATCH_SECURITY_GT2MATCHCOMMAND
-    // CLIENT TO CLIENT VULNERABILITY
-    // The peer to peer match command exploit
-    Patch::CallWithCTR(
-        WWFC_PATCH_LEVEL_CRITICAL, //
-        ADDRESS_PATCH_SECURITY_GT2MATCHCOMMAND - 0x24, // 0x800E591C
-        ASM_LAMBDA(
-            // clang-format off
-            lbz     r5, 0x11(sp);
+// CLIENT TO CLIENT VULNERABILITY
+// The peer to peer match command exploit
+WWFC_DEFINE_PATCH = Patch::CallWithCTR(
+    WWFC_PATCH_LEVEL_CRITICAL, //
+    ADDRESS_PATCH_SECURITY_GT2MATCHCOMMAND - 0x24, // 0x800E591C
+    ASM_LAMBDA(
+        (),
+        // clang-format off
+            lbz     r5, 0x11(r1);
             addi    r0, r5, 0x14;
             cmplw   r31, r0;
             bnelr-; // Error "Got wrong data size GT2 command."
@@ -59,23 +59,24 @@ WWFC_DEFINE_PATCH = {
             addi    r12, r12, 0x14;
             mtctr   r12;
             bctr;
-            // clang-format on
-        )
-    ),
+        // clang-format on
+    )
+);
 #endif
 
 #if ADDRESS_PATCH_SECURITY_QR2MATCHCOMMAND
-    // SERVER TO CLIENT VULNERABILITY
-    // The QR2/MASTER server-sent match command exploit
-    Patch::CallWithCTR(
-        WWFC_PATCH_LEVEL_CRITICAL, //
-        ADDRESS_PATCH_SECURITY_QR2MATCHCOMMAND, // 0x800E5AC8
-        ASM_LAMBDA(
-            // clang-format off
-            lbz     r5, 0x11(sp);
+// SERVER TO CLIENT VULNERABILITY
+// The QR2/MASTER server-sent match command exploit
+WWFC_DEFINE_PATCH = Patch::CallWithCTR(
+    WWFC_PATCH_LEVEL_CRITICAL, //
+    ADDRESS_PATCH_SECURITY_QR2MATCHCOMMAND, // 0x800E5AC8
+    ASM_LAMBDA(
+        (),
+        // clang-format off
+            lbz     r5, 0x11(r1);
             // Check the maximum length to prevent a buffer overflow
             cmplwi  r5, 0x80;
-            bgt-    L_SBCommandError;
+            bgt-    L%=SBCommandError;
 
             // OK, copy the data to the stack
             addi    r3, r1, 0x1C;
@@ -83,17 +84,16 @@ WWFC_DEFINE_PATCH = {
             // Call and return
             b       memcpy@local;
 
-        L_SBCommandError:;
+        L%=SBCommandError:;
             // Jump to "Got different version SBcommand." error
             mflr    r12;
             subi    r12, r12, 0x24;
             mtctr   r12;
             bctr;
-            // clang-format on
-        )
-    ),
+        // clang-format on
+    )
+);
 #endif
-};
 
 #if RMC || RMCN
 
@@ -102,16 +102,12 @@ WWFC_DEFINE_PATCH = {
 // Located in DWC_GetFriendStatusData, this one is a bit annoying because it
 // could exist in other games, it just depends on the size the caller is
 // expecting.
-WWFC_DEFINE_PATCH = {
-    Patch::WriteASM(
-        WWFC_PATCH_LEVEL_CRITICAL, //
-        RMCX_PORT(
-            0x800CE220, 0x800CE180, 0x800CE140, 0x800CE280, // Disc
-            0x800B5D98, 0x800B5D08, 0x800B5CE8, 0x800B5E08 // Channel
-        ),
-        1, ASM_LAMBDA(li r6, 0x10)
-    ),
-};
+WWFC_DEFINE_PATCH = Patch::WriteASM(
+    WWFC_PATCH_LEVEL_CRITICAL, //
+    RMCXD_PORT(0x800CE220, 0x800CE180, 0x800CE140, 0x800CE280, DEMOTODO) // Disc
+    RMCXN_PORT(0x800B5D98, 0x800B5D08, 0x800B5CE8, 0x800B5E08), // Channel
+    1, ASM_LAMBDA((), li r6, 0x10)
+);
 
 #endif
 
@@ -123,9 +119,9 @@ WWFC_DEFINE_PATCH = {
 // rediscovered by Star, who reported the exploit and then released it.
 // CVE-ID: CVE-2023-35856
 // https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-35856
-WWFC_DEFINE_PATCH = {Patch::BranchWithCTR( //
+WWFC_DEFINE_PATCH = Patch::BranchWithCTR( //
     WWFC_PATCH_LEVEL_CRITICAL, //
-    RMCXD_PORT(0x80658604, 0x8065417C, 0x80657C70, 0x8064691C), //
+    RMCXD_PORT(0x80658604, 0x8065417C, 0x80657C70, 0x8064691C, DEMOTODO), //
     [](mkw::Net::NetController* netController, mkw::Net::RacePacket* racePacket,
        u32 packetSize, u32 _, u8 playerAid) -> void {
     if (packetSize < sizeof(mkw::Net::RacePacket)) {
@@ -139,9 +135,9 @@ WWFC_DEFINE_PATCH = {Patch::BranchWithCTR( //
         return;
     }
 
-    LONGCALL u32 NETCalcCRC32( //
+    [[gnu::longcall]] u32 NETCalcCRC32( //
         const void* data, u32 size
-    ) AT(RMCXD_PORT(0x801D1CA0, 0x801D1C00, 0x801D1BC0, 0x801D1FFC));
+    ) AT(RMCXD_PORT(0x801D1CA0, 0x801D1C00, 0x801D1BC0, 0x801D1FFC, DEMOTODO));
 
     u32 savedChecksum = racePacket->checksum;
     racePacket->checksum = 0;
@@ -169,7 +165,7 @@ WWFC_DEFINE_PATCH = {Patch::BranchWithCTR( //
 
     netController->processRacePacket(playerAid, racePacket, packetSize);
 }
-)};
+);
 
 #endif
 

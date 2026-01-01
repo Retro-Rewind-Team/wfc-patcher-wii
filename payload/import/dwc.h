@@ -5,7 +5,7 @@
 #ifdef __cplusplus
 extern "C" {
 
-namespace DWC
+namespace wwfc::DWC
 {
 #endif
 
@@ -74,8 +74,9 @@ extern DWCLoginContext* stpLoginCnt AT(ADDRESS_stpLoginCnt);
 
 #if RMC
 
-LONGCALL int DWC_CloseConnectionHard(u8 playerAid)
-    AT(RMCXD_PORT(0x800D2000, 0x800D1F60, 0x800D1F20, 0x800D2060));
+[[gnu::longcall]] int DWC_CloseConnectionHard(u8 playerAid) AT(
+    RMCXD_PORT(0x800D2000, 0x800D1F60, 0x800D1F20, 0x800D2060, DEMOTODO)
+);
 
 typedef struct {
     /* 0x00 */ u32 profileId;
@@ -91,11 +92,13 @@ typedef struct {
 static_assert(sizeof(DWCiNodeInfo) == 0x30);
 #  endif
 
-LONGCALL DWCiNodeInfo* DWCi_NodeInfoList_GetNodeInfoForAid(u8 playerAid)
-    AT(RMCXD_PORT(0x800E7EE0, 0x800E7E40, 0x800E7E00, 0x800E7F40));
+[[gnu::longcall]] DWCiNodeInfo* DWCi_NodeInfoList_GetNodeInfoForAid(
+    u8 playerAid
+) AT(RMCXD_PORT(0x800E7EE0, 0x800E7E40, 0x800E7E00, 0x800E7F40, DEMOTODO));
 
-LONGCALL int DWC_CheckFriendKey(const DWCUserData* userData, u64 friendKey)
-    AT(RMCXD_PORT(0x800EB8D8, 0x800EB838, 0x800EB7F8, 0x800EB950));
+[[gnu::longcall]] int DWC_CheckFriendKey(
+    const DWCUserData* userData, u64 friendKey
+) AT(RMCXD_PORT(0x800EB8D8, 0x800EB838, 0x800EB7F8, 0x800EB950, DEMOTODO));
 
 typedef struct {
     /* 0x0 */ GameSpy::GPConnection* connection;
@@ -113,32 +116,32 @@ typedef struct {
 static_assert(sizeof(DWCMatchContext) == 0x8C0);
 #  endif
 
-extern DWCMatchContext*
-    stpMatchCnt AT(RMCXD_PORT(0x8038630C, 0x80381F8C, 0x80385C8C, 0x8037432C));
+extern DWCMatchContext* stpMatchCnt
+    AT(RMCXD_PORT(0x8038630C, 0x80381F8C, 0x80385C8C, 0x8037432C, DEMOTODO));
 
 #endif
 
-LONGCALL DWCUserData* DWCi_GetUserData( //
+[[gnu::longcall]] DWCUserData* DWCi_GetUserData( //
     void
 ) AT(ADDRESS_DWCi_GetUserData);
 
-LONGCALL s32 DWC_Base64Encode( //
+[[gnu::longcall]] s32 DWC_Base64Encode( //
     const void* in, u32 inSize, char* out, u32 outMaxSize
 ) AT(ADDRESS_DWC_Base64Encode);
 
 #if RMC
 
-LONGCALL s32 DWC_Base64Decode(
+[[gnu::longcall]] s32 DWC_Base64Decode(
     const void* source, u32 sourceSize, char* destination, u32 destinationSize
-) AT(RMCXD_PORT(0x800CC974, 0x800CC8D4, 0x800CC894, 0x800CC9D4));
+) AT(RMCXD_PORT(0x800CC974, 0x800CC8D4, 0x800CC894, 0x800CC9D4, DEMOTODO));
 
 #endif
 
-LONGCALL s32 DWCi_SetError( //
+[[gnu::longcall]] s32 DWCi_SetError( //
     s32 errorClass, s32 errorCode
 ) AT(ADDRESS_DWCi_SetError);
 
-LONGCALL s32 DWCi_HandleGPError( //
+[[gnu::longcall]] s32 DWCi_HandleGPError( //
     s32 gpError
 ) AT(ADDRESS_DWCi_HandleGPError);
 

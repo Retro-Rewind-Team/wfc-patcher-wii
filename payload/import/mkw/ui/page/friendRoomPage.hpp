@@ -13,8 +13,9 @@ class FriendRoomPage : public OpenHostPage
 public:
     void onActivate() override
     {
-        LONGCALL void onActivate(FriendRoomPage * friendRoomPage)
-            AT(RMCXD_PORT(0x805D8444, 0x806289B8, 0x805D7D20, 0x805C65E0));
+        [[gnu::longcall]] void onActivate(FriendRoomPage * friendRoomPage) AT(
+            RMCXD_PORT(0x805D8444, 0x806289B8, 0x805D7D20, 0x805C65E0, DEMOTODO)
+        );
 
         onActivate(this);
 
@@ -25,8 +26,9 @@ public:
 
     void onDeactivate() override
     {
-        LONGCALL void onDeactivate(FriendRoomPage * friendRoomPage)
-            AT(RMCXD_PORT(0x805D84FC, 0x80628A70, 0x805D7DD8, 0x805C6698));
+        [[gnu::longcall]] void onDeactivate(FriendRoomPage * friendRoomPage) AT(
+            RMCXD_PORT(0x805D84FC, 0x80628A70, 0x805D7DD8, 0x805C6698, DEMOTODO)
+        );
 
         onDeactivate(this);
 
@@ -37,8 +39,9 @@ public:
 
     void onRefocus() override
     {
-        LONGCALL void onRefocus(FriendRoomPage * friendRoomPage)
-            AT(RMCXD_PORT(0x805D8C98, 0x8062920C, 0x805D8574, 0x805C6E34));
+        [[gnu::longcall]] void onRefocus(FriendRoomPage * friendRoomPage) AT(
+            RMCXD_PORT(0x805D8C98, 0x8062920C, 0x805D8574, 0x805C6E34, DEMOTODO)
+        );
 
         onRefocus(this);
 

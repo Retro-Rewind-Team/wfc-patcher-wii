@@ -1,6 +1,6 @@
 #include "wwfcLanguage.hpp"
 #include "import/revolution.h"
-#include "wwfcUtil.h"
+#include "wwfcBase.hpp"
 
 namespace wwfc::Language
 {
@@ -17,7 +17,7 @@ typedef enum {
 u8 GetExLang(void)
 {
     const u8 raceRename = *reinterpret_cast<const u8*>(
-        RMCXD_PORT(0x80897ddf, 0x80891037, 0x8089742f, 0x80886707)
+        RMCXD_PORT(0x80897ddf, 0x80891037, 0x8089742f, 0x80886707, DEMOTODO)
     );
 
     u8 exLang = 0;

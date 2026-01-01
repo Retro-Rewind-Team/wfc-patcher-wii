@@ -1,12 +1,11 @@
 #pragma once
 
-#include "gamespy.h"
 #include "import/revolution.h"
 
 #ifdef __cplusplus
 extern "C" {
 
-namespace QR2
+namespace wwfc::QR2
 {
 #endif
 

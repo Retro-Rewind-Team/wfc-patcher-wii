@@ -1,7 +1,6 @@
 #pragma once
 
 #include "wwfcLibC.hpp"
-#include <wwfcUtil.h>
 
 namespace wwfc::EGG
 {
@@ -24,8 +23,9 @@ public:
     static void* Alloc(std::size_t size, int alignment, Heap* heap)
     {
 #if RMC
-        LONGCALL void* Alloc(std::size_t size, int alignment, Heap* heap)
-            AT(RMCXD_PORT(0x80229814, 0x80229490, 0x80229734, 0x80229B88));
+        [[gnu::longcall]] void* Alloc(std::size_t size, int alignment, Heap* heap) AT(
+            RMCXD_PORT(0x80229814, 0x80229490, 0x80229734, 0x80229B88, DEMOTODO)
+        );
 
         return Alloc(size, alignment, heap);
 #endif
@@ -35,8 +35,9 @@ public:
     static void Free(void* block, Heap* heap)
     {
 #if RMC
-        LONGCALL void Free(void* block, Heap* heap)
-            AT(RMCXD_PORT(0x80229B84, 0x80229800, 0x80229AA4, 0x80229EF8));
+        [[gnu::longcall]] void Free(void* block, Heap* heap) AT(
+            RMCXD_PORT(0x80229B84, 0x80229800, 0x80229AA4, 0x80229EF8, DEMOTODO)
+        );
 
         Free(block, heap);
 #endif

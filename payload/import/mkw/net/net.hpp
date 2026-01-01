@@ -1,11 +1,12 @@
-#if RMC
+#pragma once
 
-#  pragma once
+#if RMC
 
 #  include "import/dwc.h"
 #  include "import/mkw/hostSystem.hpp"
 #  include "import/mkw/system/system.hpp"
 #  include <wwfcGPReport.hpp>
+#  include <wwfcPayload.hpp>
 
 namespace wwfc::mkw::Net
 {
@@ -49,8 +50,9 @@ public:
 
     void sendRacePacket()
     {
-        LONGCALL void sendRacePacket(NetController * netController)
-            AT(RMCXD_PORT(0x80657E30, 0x806539A8, 0x8065749C, 0x80646148));
+        [[gnu::longcall]] void sendRacePacket(NetController * netController) AT(
+            RMCXD_PORT(0x80657E30, 0x806539A8, 0x8065749C, 0x80646148, DEMOTODO)
+        );
 
         sendRacePacket(this);
     }
@@ -58,10 +60,13 @@ public:
     void
     processRacePacket(u32 playerAid, RacePacket* racePacket, u32 packetSize)
     {
-        LONGCALL void processRacePacket(
+        [[gnu::longcall]] void processRacePacket(
             NetController * netController, u32 playerAid,
             RacePacket * racePacket, u32 packetSize
-        ) AT(RMCXD_PORT(0x80659A84, 0x806555FC, 0x806590F0, 0x80647D9C));
+        )
+            AT(RMCXD_PORT(
+                0x80659A84, 0x806555FC, 0x806590F0, 0x80647D9C, DEMOTODO
+            ));
 
         processRacePacket(this, playerAid, racePacket, packetSize);
     }
@@ -136,6 +141,17 @@ public:
         default:
             return false;
         }
+    }
+
+    bool isEnableAggressivePacketChecks() const
+    {
+        if (wwfc::Payload::g_enableAggressivePacketChecks !=
+            WWFC_BOOLEAN_RESET) {
+            return wwfc::Payload::g_enableAggressivePacketChecks !=
+                   WWFC_BOOLEAN_FALSE;
+        }
+
+        return inVanillaMatch();
     }
 
     bool inVanillaRaceScene() const
@@ -215,8 +231,9 @@ private:
 
     static u32 s_reportedAids;
 
-    static NetController* s_instance
-        AT(RMCXD_PORT(0x809C20D8, 0x809BD918, 0x809C1138, 0x809B0718));
+    static NetController* s_instance AT(
+        RMCXD_PORT(0x809C20D8, 0x809BD918, 0x809C1138, 0x809B0718, DEMOTODO)
+    );
 };
 
 static_assert(sizeof(NetController) == 0x29C8);

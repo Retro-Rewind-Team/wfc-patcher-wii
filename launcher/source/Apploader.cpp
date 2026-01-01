@@ -151,7 +151,7 @@ static void PatchAndLaunchDol(
     ICInvalidateRange(
         reinterpret_cast<void*>(stage1Start), sizeof(Stage1Payload)
     );
-    
+
     const u32 wwfcAsm = stage1Start - 0x100;
 
     const u32 start = u32(g_wwfcPatchStart);
@@ -297,7 +297,8 @@ static bool NeedIOSReload(const GameAddresses* game, u32 iosExpected)
     }
 
     // Mario Kart Wii can run under IOS58
-    if (std::memcmp(game->gameId, "RMC", 3) == 0 && iosCurrent == 58) {
+    if ((std::memcmp(game->gameId, "RMC", 3) == 0 ||
+         (std::memcmp(game->gameId, "DABJ", 4) == 0) && iosCurrent == 58)) {
         return false;
     }
 

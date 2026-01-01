@@ -45,7 +45,7 @@ class MapdataItemPoint
 public:
     struct Data {
         /* 0x00 */ EGG::Vector3f position;
-        /* 0x0C */ f32 deviation;
+        /* 0x0C */ float deviation;
         /* 0x10 */ u16 parameters[2];
     };
 

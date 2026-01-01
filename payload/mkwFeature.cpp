@@ -36,8 +36,7 @@ bool WifiMenuPage::s_hasSeenMessageOfTheDay = false;
 namespace wwfc::mkw::Feature
 {
 
-extern "C" {
-__attribute__((__used__)) static GameSpy::GPResult
+static GameSpy::GPResult
 GetMessageOfTheDay(GameSpy::GPResult gpResult, const char* message)
 {
     using namespace wwfc::mkw::UI;
@@ -73,15 +72,14 @@ GetMessageOfTheDay(GameSpy::GPResult gpResult, const char* message)
 
     return gpResult;
 }
-}
 
 // Get the Message Of The Day from the "Login Challenge 2" message
-WWFC_DEFINE_PATCH = {
-    Patch::BranchWithCTR(
-        WWFC_PATCH_LEVEL_FEATURE,
-        RMCXD_PORT(0x80101074, 0x80100FD4, 0x80100F94, 0x801010EC), //
-        ASM_LAMBDA(
-            // clang-format off
+WWFC_DEFINE_PATCH = Patch::BranchWithCTR(
+    WWFC_PATCH_LEVEL_FEATURE,
+    RMCXD_PORT(0x80101074, 0x80100FD4, 0x80100F94, 0x801010EC, DEMOTODO), //
+    ASM_LAMBDA(
+        ( : ASM_IMPORT(i, GetMessageOfTheDay)),
+        // clang-format off
             mr        r4, r26;
 
             bl        _restgpr_26;
@@ -89,19 +87,20 @@ WWFC_DEFINE_PATCH = {
             mtlr      r0;
             addi      r1, r1, 0x2D0;
             
-            b         GetMessageOfTheDay;
-            // clang-format on
-        )
-    ),
-};
+            b         %[GetMessageOfTheDay];
+        // clang-format on
+    )
+);
 
 // Display the Message Of The Day when a client connects to the server
-WWFC_DEFINE_PATCH = {
-    Patch::BranchWithCTR(
-        WWFC_PATCH_LEVEL_FEATURE,
-        RMCXD_PORT(0x8064BCD4, 0x806189C0, 0x8064B340, 0x80639FEC), //
-        ASM_LAMBDA(
-            // clang-format off
+WWFC_DEFINE_PATCH = Patch::BranchWithCTR(
+    WWFC_PATCH_LEVEL_FEATURE,
+    RMCXD_PORT(0x8064BCD4, 0x806189C0, 0x8064B340, 0x80639FEC, DEMOTODO), //
+    ASM_LAMBDA(
+        ( : ASM_IMPORT_AS(
+            i, UI::WifiMenuPage_showMessageOfTheDay, ShowMessageOfTheDay
+        )),
+        // clang-format off
             mr        r3, r31;
             
             lwz       r31, 0x0C(r1);
@@ -109,31 +108,29 @@ WWFC_DEFINE_PATCH = {
             mtlr      r0;
             addi      r1, r1, 0x10;
             
-            b         WifiMenuPage_showMessageOfTheDay;
-            // clang-format on
-        )
-    ),
-};
+            b         %[ShowMessageOfTheDay];
+        // clang-format on
+    )
+);
 
 // Allow users to open rooms without having any friends added
-WWFC_DEFINE_PATCH = {
+WWFC_DEFINE_PATCH = 
     Patch::CallWithCTR( //
         WWFC_PATCH_LEVEL_FEATURE, //
-        RMCXD_PORT(0x8064D358, 0x8061A044, 0x8064C9C4, 0x8063B670), //
+        RMCXD_PORT(0x8064D358, 0x8061A044, 0x8064C9C4, 0x8063B670, DEMOTODO), //
         [](mkw::UI::WifiFriendMenuPage* /* wifiFriendMenuPage */,
            void* /* pushButton */) -> int {
     constexpr int friendsAdded = 1;
 
     return friendsAdded;
 }
-    ),
-};
+    );
 
 // Prevent clients from stalling rooms
-WWFC_DEFINE_PATCH = {
+WWFC_DEFINE_PATCH = 
     Patch::CallWithCTR( //
         WWFC_PATCH_LEVEL_FEATURE, //
-        RMCXD_PORT(0x806579A0, 0x80653518, 0x8065700C, 0x80645CB8), //
+        RMCXD_PORT(0x806579A0, 0x80653518, 0x8065700C, 0x80645CB8, DEMOTODO), //
         [](mkw::Net::NetController* netController) -> void {
     using namespace mkw::Net;
 
@@ -146,23 +143,15 @@ WWFC_DEFINE_PATCH = {
         selectHandler->processKicks();
     }
 }
-    ),
-};
-
-extern "C" {
-__attribute__((__used__)) static void ClearReportedAid(u8 playerAid)
-{
-    mkw::Net::NetController::ClearReportedAid(playerAid);
-}
-}
+    );
 
 // Clear the flag that indicates whether an aid was reported to the server
 // when closing the connection to them.
-WWFC_DEFINE_PATCH = {
+WWFC_DEFINE_PATCH = 
     Patch::BranchWithCTR( //
         WWFC_PATCH_LEVEL_FEATURE, //
-        RMCXD_PORT(0x806588C8, 0x80654440, 0x80657F34, 0x80646BE0), //
-        ASM_LAMBDA(
+        RMCXD_PORT(0x806588C8, 0x80654440, 0x80657F34, 0x80646BE0, DEMOTODO), //
+        ASM_LAMBDA((:ASM_IMPORT_AS(i, mkw::Net::NetController::ClearReportedAid, ClearReportedAid)),
             // clang-format off
             mr        r3, r28;
 
@@ -170,17 +159,16 @@ WWFC_DEFINE_PATCH = {
             mtlr      r0;
             addi      r1, r1, 0x20;
 
-            b         ClearReportedAid;
+            b         %[ClearReportedAid];
             // clang-format on
         )
-    ),
-};
+    );
 
 // Reset the timer that is used to detect if clients are stalling the room
-WWFC_DEFINE_PATCH = {
+WWFC_DEFINE_PATCH = 
     Patch::CallWithCTR( //
         WWFC_PATCH_LEVEL_FEATURE, //
-        RMCXD_PORT(0x8065FF34, 0x80657FF8, 0x8065F5A0, 0x8064E24C), //
+        RMCXD_PORT(0x8065FF34, 0x80657FF8, 0x8065F5A0, 0x8064E24C, DEMOTODO), //
         [](mkw::Net::SelectHandler* selectHandler,
            mkw::Net::NetController* netController) -> mkw::Net::SelectHandler* {
     using namespace mkw::Net;
@@ -194,116 +182,96 @@ WWFC_DEFINE_PATCH = {
 
     return selectHandler;
 }
-    ),
-};
+    );
 
 // Report information about the upcoming match to the server
-// Note: Conflicts with pulsar, so it is commented out for now
+// Note: Conflicts with pulsar track repick prevention, reimplemented in
+// rr-pulsar as opposed to the payload.
 /*
 WWFC_DEFINE_PATCH = {
     Patch::CallWithCTR( //
         WWFC_PATCH_LEVEL_FEATURE, //
-        RMCXD_PORT(0x8066148C, 0x80659550, 0x80660AF8, 0x8064F7A4), //
+        RMCXD_PORT(0x8066148C, 0x80659550, 0x80660AF8, 0x8064F7A4, DEMOTODO), //
         []() -> void {
-    using namespace mkw::Net;
+            using namespace mkw::Net;
 
-    SelectHandler* selectHandler = SelectHandler::Instance();
-    selectHandler->decideCourse();
-    selectHandler->initPlayerIdsToPlayerAids();
+            SelectHandler* selectHandler = SelectHandler::Instance();
+            selectHandler->decideCourse();
+            selectHandler->initPlayerIdsToPlayerAids();
 
-    SelectHandler::Packet::SelectedCourse selectedCourse =
-        selectHandler->sendPacket().selectedCourse;
-    SelectHandler::Packet::EngineClass engineClass =
-        selectHandler->sendPacket().engineClass;
+            SelectHandler::Packet::SelectedCourse selectedCourse =
+                selectHandler->sendPacket().selectedCourse;
+            SelectHandler::Packet::EngineClass engineClass =
+                selectHandler->sendPacket().engineClass;
 
-    wwfc::GPReport::ReportU32(
-        "wl:mkw_select_course", static_cast<u32>(selectedCourse)
-    );
-    wwfc::GPReport::ReportU32(
-        "wl:mkw_select_cc", static_cast<u32>(engineClass)
-    );
-}
+            wwfc::GPReport::ReportU32(
+                "wl:mkw_select_course", static_cast<u32>(selectedCourse)
+            );
+            wwfc::GPReport::ReportU32(
+                "wl:mkw_select_cc", static_cast<u32>(engineClass)
+            );
+        }
     ),
 };
 */
 
 // Allow the "Open Host" feature to be enabled via the press of a button
-WWFC_DEFINE_PATCH = {
-    Patch::WritePointer(
-        WWFC_PATCH_LEVEL_FEATURE,
-        RMCXD_PORT(0x808B9008, 0x808BABF8, 0x808B8158, 0x808A7470), //
-        mkw::UI::FriendRoomPage_onActivate
-    ),
-};
-WWFC_DEFINE_PATCH = {
-    Patch::WritePointer(
-        WWFC_PATCH_LEVEL_FEATURE,
-        RMCXD_PORT(0x808B900C, 0x808BABFC, 0x808B815C, 0x808A7474), //
-        mkw::UI::FriendRoomPage_onDeactivate
-    ),
-};
-WWFC_DEFINE_PATCH = {
-    Patch::WritePointer(
-        WWFC_PATCH_LEVEL_FEATURE,
-        RMCXD_PORT(0x808B902C, 0x808BAC1C, 0x808B817C, 0x808A7494), //
-        mkw::UI::FriendRoomPage_onRefocus
-    ),
-};
-WWFC_DEFINE_PATCH = {
-    Patch::WritePointer(
-        WWFC_PATCH_LEVEL_FEATURE,
-        RMCXD_PORT(0x808BFE7C, 0x808B97CC, 0x808BEFCC, 0x808AE2EC), //
-        mkw::UI::WifiFriendMenu_onActivate
-    ),
-};
-WWFC_DEFINE_PATCH = {
-    Patch::WritePointer(
-        WWFC_PATCH_LEVEL_FEATURE,
-        RMCXD_PORT(0x808BFE80, 0x808B97D0, 0x808BEFD0, 0x808AE2F0), //
-        mkw::UI::WifiFriendMenu_onDeactivate
-    ),
-};
-WWFC_DEFINE_PATCH = {
-    Patch::WritePointer(
-        WWFC_PATCH_LEVEL_FEATURE,
-        RMCXD_PORT(0x808BFEA0, 0x808B97F0, 0x808BEFF0, 0x808AE310), //
-        mkw::UI::WifiFriendMenu_onRefocus
-    ),
-};
+WWFC_DEFINE_PATCH = Patch::WritePointer(
+    WWFC_PATCH_LEVEL_FEATURE,
+    RMCXD_PORT(0x808B9008, 0x808BABF8, 0x808B8158, 0x808A7470, DEMOTODO), //
+    mkw::UI::FriendRoomPage_onActivate
+);
+WWFC_DEFINE_PATCH = Patch::WritePointer(
+    WWFC_PATCH_LEVEL_FEATURE,
+    RMCXD_PORT(0x808B900C, 0x808BABFC, 0x808B815C, 0x808A7474, DEMOTODO), //
+    mkw::UI::FriendRoomPage_onDeactivate
+);
+WWFC_DEFINE_PATCH = Patch::WritePointer(
+    WWFC_PATCH_LEVEL_FEATURE,
+    RMCXD_PORT(0x808B902C, 0x808BAC1C, 0x808B817C, 0x808A7494, DEMOTODO), //
+    mkw::UI::FriendRoomPage_onRefocus
+);
+WWFC_DEFINE_PATCH = Patch::WritePointer(
+    WWFC_PATCH_LEVEL_FEATURE,
+    RMCXD_PORT(0x808BFE7C, 0x808B97CC, 0x808BEFCC, 0x808AE2EC, DEMOTODO), //
+    mkw::UI::WifiFriendMenu_onActivate
+);
+WWFC_DEFINE_PATCH = Patch::WritePointer(
+    WWFC_PATCH_LEVEL_FEATURE,
+    RMCXD_PORT(0x808BFE80, 0x808B97D0, 0x808BEFD0, 0x808AE2F0, DEMOTODO), //
+    mkw::UI::WifiFriendMenu_onDeactivate
+);
+WWFC_DEFINE_PATCH = Patch::WritePointer(
+    WWFC_PATCH_LEVEL_FEATURE,
+    RMCXD_PORT(0x808BFEA0, 0x808B97F0, 0x808BEFF0, 0x808AE310, DEMOTODO), //
+    mkw::UI::WifiFriendMenu_onRefocus
+);
 
 // Fix VR limit in serverbrowser requests [ppeb]
 // 30000 VR
 const u8 LIMIT[2] = {0x75, 0x30};
 // EV
-WWFC_DEFINE_PATCH = { //
-    Patch::Write( //
+WWFC_DEFINE_PATCH = Patch::Write( //
         WWFC_PATCH_LEVEL_FEATURE, //
-        RMCXD_PORT(0x80659342, 0x80654eba, 0x806589ae, 0x8064765a), //
+        RMCXD_PORT(0x80659342, 0x80654eba, 0x806589ae, 0x8064765a, DEMOTODO), //
         LIMIT
-    ),
-};
-WWFC_DEFINE_PATCH = { //
-    Patch::Write( //
+    );
+WWFC_DEFINE_PATCH = Patch::Write( //
         WWFC_PATCH_LEVEL_FEATURE, //
-        RMCXD_PORT(0x8065934a, 0x80654ec2, 0x806589b6, 0x80647662), //
+        RMCXD_PORT(0x8065934a, 0x80654ec2, 0x806589b6, 0x80647662, DEMOTODO), //
         LIMIT
-    ),
-};
+    );
 // EB
-WWFC_DEFINE_PATCH = { //
-    Patch::Write( //
+WWFC_DEFINE_PATCH = Patch::Write( //
         WWFC_PATCH_LEVEL_FEATURE, //
-        RMCXD_PORT(0x80659422, 0x80654f9a, 0x80658a8e, 0x8064773a), //
+        RMCXD_PORT(0x80659422, 0x80654f9a, 0x80658a8e, 0x8064773a, DEMOTODO), //
         LIMIT
-    ),
-};
-WWFC_DEFINE_PATCH = { //
-    Patch::Write( //
+    );
+WWFC_DEFINE_PATCH = Patch::Write( //
         WWFC_PATCH_LEVEL_FEATURE, //
-        RMCXD_PORT(0x8065942a, 0x80654fa2, 0x80658a96, 0x80647742), //
+        RMCXD_PORT(0x8065942a, 0x80654fa2, 0x80658a96, 0x80647742, DEMOTODO), //
         LIMIT
-    ),
-};
+    );
 
 } // namespace wwfc::mkw::Feature
 

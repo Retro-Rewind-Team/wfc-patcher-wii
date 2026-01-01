@@ -1,7 +1,7 @@
 #pragma once
 
 #include <wwfcLibC.hpp>
-#include <wwfcCommon.h>
+#include <wwfcTypes.h>
 
 namespace wwfc::GPReport
 {

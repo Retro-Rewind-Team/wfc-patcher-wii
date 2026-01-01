@@ -1,9 +1,13 @@
+#include "wwfcPayload.hpp"
+#include "wwfcLibC.hpp"
+#include "wwfcLog.hpp"
 #include "wwfcLogin.hpp"
 #include "wwfcPatch.hpp"
 #include "wwfcSupport.hpp"
-#include "wwfcUtil.h"
+#include "wwfcTypes.h"
 #include "wwfcVersion.h"
 #include <wwfcError.h>
+#include <wwfcTypes.h>
 
 namespace wwfc::Payload
 {
@@ -22,6 +26,8 @@ s32 Entry(wwfc_payload* payload) asm("wwfc_payload_entry");
  */
 s32 EntryAfterGOT(wwfc_payload* payload) asm("wwfc_payload_entry_no_got");
 
+s32 FunctionExec(wwfc_function_t function, ...) asm("wwfc_function_exec");
+
 // Symbols provided in the linker script
 extern u32 GOTStart asm("_G_GOTStart");
 extern u32 GOTEnd asm("_G_GOTEnd");
@@ -33,8 +39,8 @@ extern u32 CTORSStart asm("__CTORS_START__");
 extern u32 CTORSEnd asm("__CTORS_END__");
 extern u8 PayloadEnd asm("_G_End");
 
-SECTION("wwfc_header")
-constinit const wwfc_payload Header = {
+[[gnu::section("wwfc_header")]]
+constinit const wwfc_payload_ex Header = {
     .header =
         {
             .magic =
@@ -43,24 +49,24 @@ constinit const wwfc_payload Header = {
             .signature = {},
         },
     .salt = {},
-    .info =
-        {
-            .format_version = 1,
-            .format_version_compat = 1,
-            .name = WWFC_PAYLOAD_NAME,
-            .version = (WWFC_PAYLOAD_MAJOR << 24) | (WWFC_PAYLOAD_MINOR << 12) |
-                       WWFC_PAYLOAD_BETA,
-            .got_start = &GOTStart,
-            .got_end = &GOTEnd,
-            .fixup_start = &FixupStart,
-            .fixup_end = &FixupEnd,
-            .patch_list_offset = &PatchStart,
-            .patch_list_end = &PatchEnd,
-            .entry_point = &Entry,
-            .entry_point_no_got = &EntryAfterGOT,
-            .reserved = {},
-            .build_timestamp = __TIMESTAMP__,
-        },
+    .info = {
+        .format_version = 2,
+        .format_version_compat = 1,
+        .name = WWFC_PAYLOAD_NAME,
+        .version = (WWFC_PAYLOAD_MAJOR << 24) | (WWFC_PAYLOAD_MINOR << 12) |
+                   WWFC_PAYLOAD_BETA,
+        .got_start = &GOTStart,
+        .got_end = &GOTEnd,
+        .fixup_start = &FixupStart,
+        .fixup_end = &FixupEnd,
+        .patch_list_offset = &PatchStart,
+        .patch_list_end = &PatchEnd,
+        .entry_point = &Entry,
+        .entry_point_no_got = &EntryAfterGOT,
+        .function_exec = &FunctionExec,
+        .must_be_zero = {},
+        .build_timestamp = __TIMESTAMP__,
+    },
 };
 
 /**
@@ -68,31 +74,31 @@ constinit const wwfc_payload Header = {
  * then calls wwfc_payload_entry_no_got.
  */
 ASM_FUNCTION( //
-    s32 Entry(wwfc_payload* payload),
+    s32 Entry(wwfc_payload* payload), (),
     // clang-format off
     addi    r6, r3, (_G_GOTStart - 4)@l;
     addi    r7, r3, (_G_GOTEnd - 4)@l;
     addi    r8, r3, (_G_FixupEnd - 4)@l;
-L_LoopStart:;
+L%=LoopStart:;
     cmplw   r6, r7;
-    bge-    L_LoopFixupStart;
+    bge-    L%=LoopFixupStart;
     lwzu    r9, 0x4(r6);
     rlwinm. r0, r9, 0, 0x80000000;
-    bne-    L_LoopStart;
+    bne-    L%=LoopStart;
     add     r9, r9, r3;
     stw     r9, 0(r6);
-    b       L_LoopStart;
-L_LoopFixupStart:;
+    b       L%=LoopStart;
+L%=LoopFixupStart:;
     cmplw   r6, r8;
-    bge-    L_LoopFixupEnd;
+    bge-    L%=LoopFixupEnd;
     lwzu    r9, 0x4(r6);
     lwzx    r10, r9, r3;
     rlwinm. r0, r10, 0, 0x80000000;
-    bne-    L_LoopFixupStart;
+    bne-    L%=LoopFixupStart;
     add     r10, r10, r3;
     stwx    r10, r9, r3;
-    b       L_LoopFixupStart;
-L_LoopFixupEnd:;
+    b       L%=LoopFixupStart;
+L%=LoopFixupEnd:;
     b       wwfc_payload_entry_no_got;
     // clang-format on
 )
@@ -128,7 +134,7 @@ static void CallCtors(const wwfc_payload* const payload)
  */
 s32 EntryAfterGOT(wwfc_payload* payload)
 {
-#if TITLE_TYPE == TITLE_TYPE_DISC
+#if WWFC_TITLE_TYPE == WWFC_TITLE_TYPE_DISC
     // Verify that the current game is the one this payload is built for
     if (g_LoMem.discId != WWFC_GAME_ID) {
         return WL_ERROR_PAYLOAD_GAME_MISMATCH;
@@ -145,18 +151,23 @@ s32 EntryAfterGOT(wwfc_payload* payload)
 #endif
 
     // "Anticheat"
-    // Check for the presence of the gecko codehandler, and halt online connections if it is found
-if (*(u32 *)0x80001920 != 0x0 && *(u32 *)0x80001920 != 0x3C6000D0)
-{
-    if (*(u32 *)0x80001920 != 0xFEE00090 && *(u32 *)0x80001920 != 0x3C841000)
-    {
-        return WL_ERROR_PAYLOAD_STAGE1_WAITING;
+    // Check for the presence of the gecko codehandler, and halt online
+    // connections if it is found
+    if (*(u32*) 0x80001920 != 0x0 && *(u32*) 0x80001920 != 0x3C6000D0) {
+        if (*(u32*) 0x80001920 != 0xFEE00090 &&
+            *(u32*) 0x80001920 != 0x3C841000) {
+            return WL_ERROR_PAYLOAD_STAGE1_WAITING;
+        }
+        if (*(u32*) 0x802588F8 != 0x0 || *(u32*) 0x8000629C != 0x4E800020 ||
+            *(u32*) 0x80259198 == 0x9421FF98) {
+            return WL_ERROR_PAYLOAD_STAGE1_WAITING;
+        }
     }
-if (*(u32 *)0x802588F8 != 0x0 || *(u32 *)0x8000629C != 0x4E800020 || *(u32 *)0x80259198 == 0x9421FF98)
-{
-        return WL_ERROR_PAYLOAD_STAGE1_WAITING;
-}
-}
+
+    WWFC_LOG_NOTICE_FMT(
+        "Payload version %u.%u.%u", payload->info.version >> 24,
+        (payload->info.version >> 12) & 0xFFF, payload->info.version & 0xFFF
+    );
 
     CallCtors(payload);
 
@@ -169,6 +180,73 @@ if (*(u32 *)0x802588F8 != 0x0 || *(u32 *)0x8000629C != 0x4E800020 || *(u32 *)0x8
     Login::Init();
 
     return WL_ERROR_PAYLOAD_OK;
+}
+
+s32 FunctionExec(wwfc_function_t function, ...)
+{
+    __builtin_va_list args;
+    __builtin_va_start(args, function);
+
+    switch (function) {
+    case WWFC_FUNCTION_APPLY_PATCH: {
+        wwfc_patch* patch = __builtin_va_arg(args, wwfc_patch*);
+
+        Patch::ApplyPatch(reinterpret_cast<u32>(&Header), *patch);
+        return 0;
+    }
+
+    case WWFC_FUNCTION_GET_VALUE: {
+        const wwfc_key_t key = __builtin_va_arg(args, wwfc_key_t);
+
+        switch (key) {
+#define CASE(_KEY, _VALUE)                                                     \
+    case _KEY:                                                                 \
+        return _VALUE
+
+            CASE(
+                WWFC_KEY_ENABLE_AGGRESSIVE_PACKET_CHECKS,
+                g_enableAggressivePacketChecks
+            );
+#if RMC
+            CASE(
+                WWFC_KEY_MKW_ENABLE_EVENT_ITEM_ID_CHECK,
+                g_enableEventItemIdCheck
+            );
+            CASE(WWFC_KEY_MKW_ENABLE_ULTRA_UNCUT, g_enableUltraUncut);
+#endif
+#undef CASE
+        }
+        return -1;
+    }
+
+    case WWFC_FUNCTION_SET_VALUE: {
+        const wwfc_key_t key = __builtin_va_arg(args, wwfc_key_t);
+
+        switch (key) {
+#define CASE(_KEY, _VALUE)                                                     \
+    case _KEY:                                                                 \
+        _VALUE =                                                               \
+            __builtin_va_arg(args, std::remove_cvref_t<decltype(_VALUE)>);     \
+        return 0
+
+            CASE(
+                WWFC_KEY_ENABLE_AGGRESSIVE_PACKET_CHECKS,
+                g_enableAggressivePacketChecks
+            );
+#if RMC
+            CASE(
+                WWFC_KEY_MKW_ENABLE_EVENT_ITEM_ID_CHECK,
+                g_enableEventItemIdCheck
+            );
+            CASE(WWFC_KEY_MKW_ENABLE_ULTRA_UNCUT, g_enableUltraUncut);
+#endif
+#undef CASE
+        }
+        return -1;
+    }
+    }
+
+    return -1;
 }
 
 } // namespace wwfc::Payload

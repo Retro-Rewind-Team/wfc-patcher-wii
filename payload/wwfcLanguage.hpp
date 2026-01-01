@@ -1,7 +1,5 @@
 #pragma once
 
-#include "wwfcCommon.h"
-
 namespace wwfc::Language
 {
 

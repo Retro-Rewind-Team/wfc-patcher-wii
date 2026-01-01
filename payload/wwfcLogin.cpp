@@ -15,11 +15,11 @@ namespace wwfc::Login
 int gpiSendLoginHook( //
     GameSpy::GPConnection* connection, GameSpy::GPIConnectData* data,
     GameSpy::GPIBuffer* outputBuffer
-) asm("gpiSendLoginHook");
+);
 
 int gpiAddLocalInfoHook( //
     GameSpy::GPConnection* connection, GameSpy::GPIBuffer* outputBuffer
-) asm("gpiAddLocalInfoHook");
+);
 
 static void SendExtendedLogin( //
     GameSpy::GPConnection* connection, const char* authToken,
@@ -40,38 +40,38 @@ void Init()
     }
 }
 
-WWFC_DEFINE_PATCH = {
-    Patch::CallWithCTR(
-        WWFC_PATCH_LEVEL_CRITICAL, //
-        ADDRESS_PATCH_GPISENDLOGIN, // 0x801007B0
-        ASM_LAMBDA(
-            // clang-format off
+WWFC_DEFINE_PATCH = Patch::CallWithCTR(
+    WWFC_PATCH_LEVEL_CRITICAL, //
+    ADDRESS_PATCH_GPISENDLOGIN, // 0x801007B0
+    ASM_LAMBDA(
+        ( : ASM_IMPORT(i, gpiSendLoginHook)),
+        // clang-format off
             mr      r3, r28;
             mr      r4, r29;
             addi    r5, r30, 0x210;
-            b       gpiSendLoginHook;
-            // clang-format on
-        )
-    ),
-    Patch::CallWithCTR(
-        // For the DNS patch method
-        WWFC_PATCH_LEVEL_SUPPORT,
-        ADDRESS_PATCH_GPIADDLOCALINFO, // 0x801021C0
-        ASM_LAMBDA(
-            // clang-format off
+            b       %[gpiSendLoginHook];
+        // clang-format on
+    )
+);
+WWFC_DEFINE_PATCH = Patch::CallWithCTR(
+    // For the DNS patch method
+    WWFC_PATCH_LEVEL_SUPPORT,
+    ADDRESS_PATCH_GPIADDLOCALINFO, // 0x801021C0
+    ASM_LAMBDA(
+        ( : ASM_IMPORT(i, gpiAddLocalInfoHook)),
+        // clang-format off
             mr      r3, r28;
             mr      r4, r29;
             mflr    r31;
-            bl      gpiAddLocalInfoHook;
+            bl      %[gpiAddLocalInfoHook];
             mtlr    r31;
-            lwz     r31, 0x1C(sp);
-            lwz     r30, 0x18(sp);
-            lwz     r29, 0x14(sp);
+            lwz     r31, 0x1C(r1);
+            lwz     r30, 0x18(r1);
+            lwz     r29, 0x14(r1);
             blr;
-            // clang-format on
-        )
-    ),
-};
+        // clang-format on
+    )
+);
 
 int gpiSendLoginHook(
     GameSpy::GPConnection* connection, GameSpy::GPIConnectData* data,
@@ -180,15 +180,15 @@ void SendExtendedLogin(
         connection, outputBuffer, HostPlatform::IsDolphin() ? "Dolphin" : "Wii"
     );
 
-    LONGCALL void NETSHA1Init( //
-        NETSHA1CTX* ctx
-    ) AT(RMCXD_PORT(0x801D24F4, 0x801D2454, 0x801D2414, 0x801D2850));
-    LONGCALL void NETSHA1Update( //
-        NETSHA1CTX* ctx, const void* input, u32 length
-    ) AT(RMCXD_PORT(0x801D2544, 0x801D24A4, 0x801D2464, 0x801D28A0));
-    LONGCALL void NETSHA1GetDigest( //
-        NETSHA1CTX* ctx, void* digest
-    ) AT(RMCXD_PORT(0x801D25F8, 0x801D2558, 0x801D2518, 0x801D2954));
+    [[gnu::longcall]] void NETSHA1Init( //
+        wwfc::mkw::Net::NETSHA1CTX* ctx
+    ) AT(RMCXD_PORT(0x801D24F4, 0x801D2454, 0x801D2414, 0x801D2850, DEMOTODO));
+    [[gnu::longcall]] void NETSHA1Update( //
+        wwfc::mkw::Net::NETSHA1CTX* ctx, const void* input, u32 length
+    ) AT(RMCXD_PORT(0x801D2544, 0x801D24A4, 0x801D2464, 0x801D28A0, DEMOTODO));
+    [[gnu::longcall]] void NETSHA1GetDigest( //
+        wwfc::mkw::Net::NETSHA1CTX* ctx, void* digest
+    ) AT(RMCXD_PORT(0x801D25F8, 0x801D2558, 0x801D2518, 0x801D2954, DEMOTODO));
 
     u8* digest = reinterpret_cast<u8*>(0x800017b0);
     char strDigest[41];
@@ -410,22 +410,22 @@ static void SendAuthTokenSignature(
 
 // Always check if the SAKE server has the latest friend info, as it can get
 // outdated when switching between servers (such as Wiimmfi)
-WWFC_DEFINE_PATCH = {Patch::WriteASM(
+WWFC_DEFINE_PATCH = Patch::WriteASM(
     WWFC_PATCH_LEVEL_SUPPORT | WWFC_PATCH_LEVEL_BUGFIX, //
-    RMCXD_PORT(0x80672FCC, 0x8066B868, 0x80672638, 0x80661324), //
-    1, ASM_LAMBDA(b 0x70)
-)};
+    RMCXD_PORT(0x80672FCC, 0x8066B868, 0x80672638, 0x80661324, DEMOTODO), //
+    1, ASM_LAMBDA((), b 0x70)
+);
 
 #endif
 
 #if RMCN
 
 // Same patch as above but for the Mario Kart Channel
-WWFC_DEFINE_PATCH = {Patch::WriteASM(
+WWFC_DEFINE_PATCH = Patch::WriteASM(
     WWFC_PATCH_LEVEL_SUPPORT | WWFC_PATCH_LEVEL_BUGFIX, //
     RMCXN_PORT(0x801FD08C, 0x801FCFEC, 0x801FCE24, 0x801FD87C), //
-    1, ASM_LAMBDA(b 0x6C)
-)};
+    1, ASM_LAMBDA((), b 0x6C)
+);
 
 #endif
 
@@ -434,11 +434,11 @@ WWFC_DEFINE_PATCH = {Patch::WriteASM(
 // Remove the needless wait during the login friend process. It doesn't seem to
 // make a difference now due to the fast way we handle friend authorization.
 // TODO: This could apply to other games as well
-WWFC_DEFINE_PATCH = {Patch::WriteASM(
+WWFC_DEFINE_PATCH = Patch::WriteASM(
     WWFC_PATCH_LEVEL_SUPPORT, //
-    RMCXD_PORT(0x800CE710, 0x800CE670, 0x800CE630, 0x800CE770), //
-    1, ASM_LAMBDA(nop)
-)};
+    RMCXD_PORT(0x800CE710, 0x800CE670, 0x800CE630, 0x800CE770, DEMOTODO), //
+    1, ASM_LAMBDA((), nop)
+);
 
 #endif
 

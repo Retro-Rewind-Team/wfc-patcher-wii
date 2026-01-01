@@ -1,98 +1,110 @@
 #pragma once
 
-#include "wwfcLibC.hpp"
 #include <wwfcAsm.h>
-#include <wwfcCommon.h>
+#include <wwfcTypes.h>
 
 namespace wwfc::Patch
 {
 
-void ApplyPatch(u32 base, const wwfc_patch& patch);
+template <class T0, class T1>
+struct [[gnu::packed]] PatchEntry {
+    static_assert(sizeof(T0) == 4 && sizeof(T1) == 4);
+
+    u8 level; // wwfc_patch_level
+    u8 type; // wwfc_patch_type
+    u8 reserved[2];
+    u32 address;
+    T0 arg0;
+    T1 arg1;
+};
+
+void ApplyPatch(u32 base, wwfc_patch& patch);
 void ApplyPatchList(u32 base, wwfc_patch* patches, u32 patchCount);
 
-template <typename T, u32 N>
-constexpr wwfc_patch Write(u8 level, u32 address, const T (&string)[N])
+template <class T, u32 N>
+constexpr auto Write(u8 level, u32 address, const T (&string)[N])
 {
-    return wwfc_patch{
+    return PatchEntry<const T*, u32>{
         .level = level,
         .type = WWFC_PATCH_TYPE_WRITE,
         .address = address,
-        .arg0p = string,
+        .arg0 = string,
         .arg1 = sizeof(string),
     };
 }
 
 template <u32 N>
-constexpr wwfc_patch WriteString(u8 level, u32 address, const char (&string)[N])
+constexpr auto WriteString(u8 level, u32 address, const char (&string)[N])
 {
-    return wwfc_patch{
+    return PatchEntry<const char*, u32>{
         .level = level,
         .type = WWFC_PATCH_TYPE_WRITE,
         .address = address,
-        .arg0p = string,
+        .arg0 = string,
         .arg1 = sizeof(string),
     };
 }
 
-constexpr wwfc_patch WritePointer(u8 level, u32 address, auto pointer)
+constexpr auto WritePointer(u8 level, u32 address, auto pointer)
 {
-    return wwfc_patch{
+    return PatchEntry<decltype(+pointer), u32>{
         .level = level,
         .type = WWFC_PATCH_TYPE_WRITE_POINTER,
         .address = address,
-        .arg0 = u32(+pointer),
+        .arg0 = +pointer,
     };
 }
 
-constexpr wwfc_patch
+constexpr auto
 WriteASM(u8 level, u32 address, u32 instructionCount, auto function)
 {
-    return wwfc_patch{
+    return PatchEntry<decltype(+function), u32>{
         .level = level,
         .type = WWFC_PATCH_TYPE_WRITE,
         .address = address,
-        .arg0 = u32(+function),
+        .arg0 = +function,
         .arg1 = instructionCount * sizeof(u32),
     };
 }
 
-constexpr wwfc_patch
-BranchWithCTR(u8 level, u32 address, auto function, u32 tempReg = r12)
+constexpr auto
+BranchWithCTR(u8 level, u32 address, auto function, u32 tempReg = 12)
 {
-    return wwfc_patch{
+    return PatchEntry<decltype(+function), u32>{
         .level = level,
         .type = WWFC_PATCH_TYPE_BRANCH_CTR,
         .address = address,
-        .arg0 = u32(+function),
+        .arg0 = +function,
         .arg1 = tempReg,
     };
 }
 
-constexpr wwfc_patch
-CallWithCTR(u8 level, u32 address, auto function, u32 tempReg = r12)
+constexpr auto
+CallWithCTR(u8 level, u32 address, auto function, u32 tempReg = 12)
 {
-    return wwfc_patch{
+    return PatchEntry<decltype(+function), u32>{
         .level = level,
         .type = WWFC_PATCH_TYPE_BRANCH_CTR_LINK,
         .address = address,
-        .arg0 = u32(+function),
+        .arg0 = +function,
         .arg1 = tempReg,
     };
 }
 
-constexpr wwfc_patch Call(u8 level, u32 address, auto function)
+constexpr auto Call(u8 level, u32 address, auto function)
 {
-    return wwfc_patch{
+    return PatchEntry<decltype(+function), u32>{
         .level = level,
         .type = WWFC_PATCH_TYPE_CALL,
         .address = address,
-        .arg0 = u32(+function),
+        .arg0 = +function,
     };
 }
 
 #define _WWFC_DEFINE_PATCH2(NUM)                                               \
-    __attribute__((__section__(".wwfc_patch"))                                 \
-    ) constinit wwfc_patch __wwfc_patch_##NUM[]
+    __attribute__((                                                            \
+        __section__(".wwfc_patch")                                             \
+    )) constinit auto __wwfc_patch_##NUM
 
 #define _WWFC_DEFINE_PATCH1(NUM) _WWFC_DEFINE_PATCH2(NUM)
 #define WWFC_DEFINE_PATCH _WWFC_DEFINE_PATCH1(__COUNTER__)
@@ -111,7 +123,8 @@ constexpr wwfc_patch Call(u8 level, u32 address, auto function)
                      "mflr 12\n"                                               \
                      "lwz 12, _CTR_STUB_" #_COUNTER " - (. - 4)(12)\n"         \
                      "mtctr 12\n"                                              \
-                     "bctr\n");                                                \
+                     "bctr\n"                                                  \
+                     :);                                                       \
         __builtin_unreachable();                                               \
     }
 

@@ -1,22 +1,24 @@
-#include <wwfcCommon.h>
 #include <wwfcError.h>
 #include <wwfcPayloadPublicKey.hpp>
+#include <wwfcTypes.h>
 
-#define NOINLINE __attribute__((noinline))
-#define PACKED __attribute__((packed))
-#define LONGCALL __attribute__((__longcall__))
-#define SECTION(_SECTION) __attribute__((__section__(_SECTION)))
+#define AT_EXPANDED(_ADDRESS) asm(#_ADDRESS)
+#define AT(_ADDRESS) AT_EXPANDED(_ADDRESS)
 
-#define FILL(_START, _END) u8 _##_START[_END - _START]
+#define SHA256_DIGEST_SIZE 32
 
-#define _STRIFY1(_VAL) #_VAL
-#define STRIFY(_VAL) _STRIFY1(_VAL)
-
-#define AT(_ADDRESS) asm(STRIFY(_ADDRESS))
+using s8 = wwfc_int8_t;
+using s16 = wwfc_int16_t;
+using s32 = wwfc_int32_t;
+using s64 = wwfc_int64_t;
+using u8 = wwfc_uint8_t;
+using u16 = wwfc_uint16_t;
+using u32 = wwfc_uint32_t;
+using u64 = wwfc_uint64_t;
 
 extern "C" {
 
-NOINLINE
+[[gnu::noinline]]
 int memcmp(const void* s1, const void* s2, u32 n)
 {
     const u8* su1 = (const u8*) s1;
@@ -29,7 +31,7 @@ int memcmp(const void* s1, const void* s2, u32 n)
     return i < n ? su1[i] - su2[i] : 0;
 }
 
-NOINLINE
+[[gnu::noinline]]
 void* memset(void* ptr, int value, u32 n)
 {
     u8* ptru = (u8*) ptr;
@@ -41,7 +43,7 @@ void* memset(void* ptr, int value, u32 n)
     return ptr;
 }
 
-NOINLINE
+[[gnu::noinline]]
 void* memcpy(void* __restrict dst, const void* __restrict src, u32 n)
 {
     const u8* srcu = (const u8*) src;
@@ -178,7 +180,6 @@ private:
     // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
     // THE POSSIBILITY OF SUCH DAMAGE.
 
-#define SHA256_DIGEST_SIZE 32
 #define SHA256_BLOCK_SIZE 64
 
     /* SHA256 context */
@@ -265,7 +266,7 @@ private:
         0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
     };
 
-    NOINLINE
+    [[gnu::noinline]]
     void SHA256Init(SHA256Context* ctx)
     {
         int i;
@@ -875,9 +876,8 @@ public:
 static Stage1 s_stage1;
 
 #if !STAGE1_SBCM
-extern "C" SECTION(".start") void wwfcStage1Entry(
-    u8* stage1CodePtr, Stage1::Stage1Param* param, s32* authRequest
-)
+extern "C" [[gnu::section(".start")]] void
+wwfcStage1Entry(u8* stage1CodePtr, Stage1::Stage1Param* param, s32* authRequest)
 {
     void* httpCallback;
     asm volatile("addi %0, %1, %2\n"

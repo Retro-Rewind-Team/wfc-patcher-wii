@@ -48,8 +48,9 @@ private:
     /* 0x54 */ EGG::SceneManager* m_sceneManager;
     /* 0x58 */ u8 _74[0x74 - 0x58];
 
-    static System& s_instance
-        AT(RMCXD_PORT(0x80385FC8, 0x80381C48, 0x80385948, 0x80373FE8));
+    static System& s_instance AT(
+        RMCXD_PORT(0x80385FC8, 0x80381C48, 0x80385948, 0x80373FE8, DEMOTODO)
+    );
 };
 
 static_assert(sizeof(System) == 0x74);

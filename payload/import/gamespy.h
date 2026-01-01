@@ -1,11 +1,9 @@
 #pragma once
 
-#include <wwfcUtil.h>
-
 #ifdef __cplusplus
 extern "C" {
 
-namespace GameSpy
+namespace wwfc::GameSpy
 {
 #endif
 
@@ -92,25 +90,23 @@ typedef struct {
     GPIBuffer updateproBuffer;
 } GPIConnection;
 
-LONGCALL GPResult gpiAppendStringToBuffer( //
+[[gnu::longcall]] GPResult gpiAppendStringToBuffer( //
     GPConnection* connection, GPIBuffer* outputBuffer, const char* buffer
 ) AT(ADDRESS_gpiAppendStringToBuffer);
 
-LONGCALL int gpiAppendIntToBuffer( //
+[[gnu::longcall]] int gpiAppendIntToBuffer( //
     GPConnection* connection, GPIBuffer* outputBuffer, int num
 ) AT(ADDRESS_gpiAppendIntToBuffer);
 
-LONGCALL int gpiAppendCharToBuffer( //
+int gpiAppendCharToBuffer( //
     GPConnection* connection, GPIBuffer* outputBuffer, char c
-) AT(RMCXD_PORT(0x800FEE90, 0x800FEDF0, 0x800FEDB0, 0x800FEF08));
+) AT(RMCXD_PORT(0x800FEE90, 0x800FEDF0, 0x800FEDB0, 0x800FEF08, DEMOTODO));
 
 #if RMC
 
-LONGCALL GPIBool gpiValueForKey( //
+[[gnu::longcall]] GPIBool gpiValueForKey( //
     const char* command, const char* key, char* value, int length
 ) AT(ADDRESS_gpiValueForKey);
-
-
 
 GPResult
 gpiSendLocalInfo(GPConnection* gpConnection, const char* key, const char* value)
@@ -134,16 +130,16 @@ gpiSendLocalInfo(GPConnection* gpConnection, const char* key, const char* value)
 
 #endif
 
-LONGCALL void gpiCallErrorCallback( //
+[[gnu::longcall]] void gpiCallErrorCallback( //
     GPConnection* connection, GPResult result, GPEnum fatal
 ) AT(ADDRESS_gpiCallErrorCallback);
 
-LONGCALL GT2Result gt2CreateSocket( //
+[[gnu::longcall]] GT2Result gt2CreateSocket( //
     void* sock, const char* localAddress, int outgoingBufferSize,
     int incomingBufferSize, void* callback
 ) AT(ADDRESS_gt2CreateSocket);
 
-LONGCALL const char* gt2AddressToString( //
+[[gnu::longcall]] const char* gt2AddressToString( //
     u32 ip, u16 port, char string[22]
 ) AT(ADDRESS_gt2AddressToString);
 

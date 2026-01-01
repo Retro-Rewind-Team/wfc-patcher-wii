@@ -1,9 +1,19 @@
 #pragma once
 
-#include <wwfcCommon.h>
+#include <wwfcInteger.h>
 
-#define SECTION(_SECTION) __attribute__((__section__(_SECTION)))
-#define LONGCALL __attribute__((__longcall__))
+namespace wwfc
+{
+
+using s8 = wwfc_int8_t;
+using s16 = wwfc_int16_t;
+using s32 = wwfc_int32_t;
+using s64 = wwfc_int64_t;
+using u8 = wwfc_uint8_t;
+using u16 = wwfc_uint16_t;
+using u32 = wwfc_uint32_t;
+using u64 = wwfc_uint64_t;
+
 #define PACKED __attribute__((__packed__))
 
 #define FILL(_START, _END) u8 _##_START[_END - _START]
@@ -20,7 +30,7 @@
 // Mario Kart Wii Rev 0 [PAL]
 #  define RMC 1
 
-#  define RMCXD_PORT(P, E, J, K) P
+#  define RMCXD_PORT(P, E, J, K, DJ) P
 #  define RMCXN_PORT(P, E, J, K)
 
 #elif RMCED00
@@ -28,7 +38,7 @@
 // Mario Kart Wii Rev 0 [NTSC-U]
 #  define RMC 1
 
-#  define RMCXD_PORT(P, E, J, K) E
+#  define RMCXD_PORT(P, E, J, K, DJ) E
 #  define RMCXN_PORT(P, E, J, K)
 
 #elif RMCJD00
@@ -36,7 +46,7 @@
 // Mario Kart Wii Rev 0 [NTSC-J]
 #  define RMC 1
 
-#  define RMCXD_PORT(P, E, J, K) J
+#  define RMCXD_PORT(P, E, J, K, DJ) J
 #  define RMCXN_PORT(P, E, J, K)
 
 #elif RMCKD00
@@ -44,7 +54,7 @@
 // Mario Kart Wii Rev 0 [NTSC-J]
 #  define RMC 1
 
-#  define RMCXD_PORT(P, E, J, K) K
+#  define RMCXD_PORT(P, E, J, K, DJ) K
 #  define RMCXN_PORT(P, E, J, K)
 
 #elif RMCPN0001
@@ -52,7 +62,7 @@
 // Mario Kart Channel Rev 0 [PAL]
 #  define RMCN 1
 
-#  define RMCXD_PORT(P, E, J, K)
+#  define RMCXD_PORT(P, E, J, K, DJ)
 #  define RMCXN_PORT(P, E, J, K) P
 
 #elif RMCEN0001
@@ -60,7 +70,7 @@
 // Mario Kart Channel Rev 0 [NTSC-U]
 #  define RMCN 1
 
-#  define RMCXD_PORT(P, E, J, K)
+#  define RMCXD_PORT(P, E, J, K, DJ)
 #  define RMCXN_PORT(P, E, J, K) E
 
 #elif RMCJN0001
@@ -68,7 +78,7 @@
 // Mario Kart Channel Rev 0 [NTSC-J]
 #  define RMCN 1
 
-#  define RMCXD_PORT(P, E, J, K)
+#  define RMCXD_PORT(P, E, J, K, DJ)
 #  define RMCXN_PORT(P, E, J, K) J
 
 #elif RMCKN0001
@@ -76,15 +86,25 @@
 // Mario Kart Channel Rev 0 [NTSC-K]
 #  define RMCN 1
 
-#  define RMCXD_PORT(P, E, J, K)
+#  define RMCXD_PORT(P, E, J, K, DJ)
 #  define RMCXN_PORT(P, E, J, K) K
+
+#elif DABJD00
+
+// Mario Kart Wii Kiosk Demo Rev 0 (NTSC-J)
+
+#  define RMC 1
+
+#  define RMCXD_PORT(P, E, J, K, DJ) DJ
+#  define RMCXN_PORT(P, E, J, K)
+#  define DEMOTODO 0
 
 #endif
 
 #if RMC || RMCN
 
-#  define RMCX_PORT(P, E, J, K, NP, NE, NJ, NK)                                \
-      RMCXD_PORT(P, E, J, K) RMCXN_PORT(NP, NE, NJ, NK)
+#  define RMCX_PORT(P, E, J, K, DJ, NP, NE, NJ, NK)                            \
+      RMCXD_PORT(P, E, J, K, DJ) RMCXN_PORT(NP, NE, NJ, NK)
 
 #endif
 
@@ -115,3 +135,5 @@
 #  define RSBX_PORT(E, J, P0, P1) P1
 
 #endif
+
+} // namespace wwfc
