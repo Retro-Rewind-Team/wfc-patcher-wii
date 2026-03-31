@@ -27,7 +27,7 @@ bool OpenHostPage::s_sentOpenHostValue = false;
 OpenHostMessages;
 
 const wchar_t* WifiMenuPage::s_messageOfTheDay =
-    L"Welcome to\nWiiLink Wi-Fi Connection!";
+    L"Welcome to\nRetro Wi-Fi Connection!";
 wchar_t WifiMenuPage::s_messageOfTheDayBuffer[256] = {};
 bool WifiMenuPage::s_hasSeenMessageOfTheDay = false;
 
