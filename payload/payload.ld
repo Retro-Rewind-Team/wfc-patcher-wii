@@ -32,6 +32,7 @@ SECTIONS
 		KEEP(*(.ctors*))
 		__CTORS_END__ = .;
 
+		KEEP(*(.text.wwfc_nugget_init_no_patch))
 		*(.text*)
 		*(.insert*)
 		*(.rodata*)

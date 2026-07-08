@@ -4,6 +4,7 @@
 # Local scripts
 *.bat
 *.sh
+__pycache__/
 
 !make.sh
 dist/
@@ -43,6 +44,7 @@ patch/build
 patch/build_tool
 payload/build
 payload/binary
+payload/nugget
 exploit/build
 exploit/sbcm
 launcher/build

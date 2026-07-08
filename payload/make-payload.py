@@ -1,5 +1,5 @@
 from multiprocessing.pool import ThreadPool, TimeoutError
-import time, os, csv, subprocess
+import time, os, csv, subprocess, sys
 from sys import argv
 
 devkitppc = os.environ.get('DEVKITPPC')
@@ -36,9 +36,11 @@ def build(game):
 
     out_path = os.path.join("build", game["Title"])
     binary_path = os.path.join("binary", "payload." + game["Title"] + ".bin")
+    contract_path = os.path.join("nugget", "contract." + game["Title"] + ".json")
     include_path = os.path.join("..", "include")
     subprocess.run([path_cc, "-o" + out_path + ".elf", "wwfc.cpp", "-Tpayload.ld", "-I" + include_path, "-I."] + flags).check_returncode()
     subprocess.run([path_objcopy, out_path + ".elf", binary_path, "-O", "binary"]).check_returncode()
+    subprocess.run([sys.executable, "generate-nugget-contract.py", binary_path, "--elf", out_path + ".elf", "--out", contract_path]).check_returncode()
 
 if __name__ == "__main__":
     try:
@@ -48,6 +50,11 @@ if __name__ == "__main__":
 
     try:
         os.mkdir("binary")
+    except:
+        pass
+
+    try:
+        os.mkdir("nugget")
     except:
         pass
 

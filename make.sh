@@ -141,6 +141,11 @@ if $clean; then
         rm -r "$PAYLOAD_DIR/binary"
     fi
 
+    if [ -d "$PAYLOAD_DIR/nugget" ]; then
+        echo "Removing $PAYLOAD_DIR/nugget"
+        rm -r "$PAYLOAD_DIR/nugget"
+    fi
+
     if [ -d "$EXPLOIT_DIR/build" ]; then
         echo "Cleaning $EXPLOIT_DIR"
         rm -r "$EXPLOIT_DIR/build"
@@ -186,6 +191,13 @@ if $payload; then
 
     echo "Copying payloads to dist!"
     cp -r "$SCRIPT_DIR/payload/binary/" "$SCRIPT_DIR/dist/binary"
+
+    if [ -e "$SCRIPT_DIR/dist/nugget" ]; then
+        rm -r "$SCRIPT_DIR/dist/nugget"
+    fi
+
+    echo "Copying nugget payload contracts to dist!"
+    cp -r "$SCRIPT_DIR/payload/nugget/" "$SCRIPT_DIR/dist/nugget"
 fi
 
 if $stage1; then

@@ -1,0 +1,12 @@
+{
+  "format": "retro-wfc-nugget-base-identities",
+  "formatVersion": 1,
+  "identities": [
+    {
+      "id": "mkwii-pal-nugget-base-v1",
+      "contractGames": ["RMCPD00"],
+      "gameId": "RMCP01",
+      "region": "P"
+    }
+  ]
+}

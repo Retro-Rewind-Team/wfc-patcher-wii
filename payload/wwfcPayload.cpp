@@ -26,6 +26,12 @@ s32 Entry(wwfc_payload* payload) asm("wwfc_payload_entry");
  */
 s32 EntryAfterGOT(wwfc_payload* payload) asm("wwfc_payload_entry_no_got");
 
+/**
+ * nugget init root. The nugget build statically lowers the patch list, then
+ * calls this payload-owned setup entry without replaying runtime patches.
+ */
+s32 nuggetInit(wwfc_payload* payload) asm("wwfc_nugget_init_no_patch");
+
 s32 FunctionExec(wwfc_function_t function, ...) asm("wwfc_function_exec");
 
 // Symbols provided in the linker script
@@ -128,11 +134,7 @@ static void CallCtors(const wwfc_payload* const payload)
     }
 }
 
-/**
- * Payload entry point. Does not apply global offset table and fixup
- * relocations. Automatically called by wwfc_payload_entry.
- */
-s32 EntryAfterGOT(wwfc_payload* payload)
+static s32 InitializePayload(wwfc_payload* payload, const bool applyPatchList)
 {
 #if WWFC_TITLE_TYPE == WWFC_TITLE_TYPE_DISC
     // Verify that the current game is the one this payload is built for
@@ -171,15 +173,31 @@ s32 EntryAfterGOT(wwfc_payload* payload)
 
     CallCtors(payload);
 
-    Patch::ApplyPatchList(
-        reinterpret_cast<u32>(payload), &PatchStart,
-        std::distance(&PatchStart, &PatchEnd)
-    );
+    if (applyPatchList) {
+        Patch::ApplyPatchList(
+            reinterpret_cast<u32>(payload), &PatchStart,
+            std::distance(&PatchStart, &PatchEnd)
+        );
+    }
 
     Support::ChangeAuthURL();
     Login::Init();
 
     return WL_ERROR_PAYLOAD_OK;
+}
+
+/**
+ * Payload entry point. Does not apply global offset table and fixup
+ * relocations. Automatically called by wwfc_payload_entry.
+ */
+s32 EntryAfterGOT(wwfc_payload* payload)
+{
+    return InitializePayload(payload, true);
+}
+
+s32 nuggetInit(wwfc_payload* payload)
+{
+    return InitializePayload(payload, false);
 }
 
 s32 FunctionExec(wwfc_function_t function, ...)
