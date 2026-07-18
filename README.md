@@ -22,7 +22,7 @@ Each directory includes its own README file with more detailed information on th
 
 | Switch         | Domain           |
 | -------------- | ---------------- |
-| -DPROD         | rwfc.net         |
+| -DPROD         | play.rwfc.net    |
 | -DTEST         | zpltest.xyz      |
 | None Specified | nwfc.wiinoma.com |
 
