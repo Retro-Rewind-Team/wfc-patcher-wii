@@ -1,6 +1,7 @@
 #include "import/revolution.h"
 #include "wwfcLog.hpp"
 #include "wwfcPatch.hpp"
+#include "wwfcTypes.h"
 
 namespace wwfc::Support
 {
@@ -159,5 +160,74 @@ void ChangeAuthURL()
     *reinterpret_cast<const char**>(ADDRESS_NASWII_AC_URL_POINTER) =
         "http://nas." WWFC_DOMAIN "/ac";
 }
+
+#if RMC
+
+// Remove duplicate Host header from DWC Login
+WWFC_DEFINE_PATCH = Patch::Write(
+    WWFC_PATCH_LEVEL_SUPPORT,
+    RMCXD_PORT(0x800ed868, 0x800ed7c8, 0x800ed788, 0x800ed8e0, DEMOTODO),
+    (u32[]) {0x60000000}
+);
+
+// Replace sake endpoints with the correct domain
+// This will break if WWFC_DOMAIN is longer than nintendowifi.net
+static_assert(
+    sizeof(WWFC_DOMAIN) <= sizeof("nintendowifi.net"),
+    "WWFC_DOMAIN is too long!"
+);
+
+// SakeStorageServer
+
+WWFC_DEFINE_PATCH = Patch::WriteString(
+    WWFC_PATCH_LEVEL_SUPPORT,
+    RMCXD_PORT(0x80279d58, 0x80275a18, 0x802796f8, 0x80267b38, DEMOTODO),
+    "http://%s.sake.gs." WWFC_DOMAIN "/SakeStorageServer/StorageServer.asmx"
+);
+
+WWFC_DEFINE_PATCH = Patch::WriteString(
+    WWFC_PATCH_LEVEL_SUPPORT,
+    RMCXD_PORT(0x8027e0a0, 0x80279d60, 0x8027da40, 0x8026bf50, DEMOTODO),
+    "http://%s.sake.gs." WWFC_DOMAIN "/SakeStorageServer/StorageServer.asmx"
+);
+
+// SakeFileServer Ghost upload/download
+
+WWFC_DEFINE_PATCH = Patch::WriteString(
+    WWFC_PATCH_LEVEL_SUPPORT,
+    RMCXD_PORT(0x8089a6b8, 0x80895cc0, 0x80899818, 0x80888af0, DEMOTODO),
+    "http://mariokartwii.sake.gs." WWFC_DOMAIN
+    "/SakeFileServer/ghostdownload.aspx?gameid=1687&region=0"
+);
+
+// WWFC_DEFINE_PATCH = Patch::WriteString(
+//     WWFC_PATCH_LEVEL_SUPPORT,
+//     RMCXD_PORT(0x8089ac85),
+//     "%s://mariokartwii.sake.gs." WWFC_DOMAIN
+//     "/SakeFileServer/ghostupload.aspx?gameid=%d&regionid=%d&courseid=%d&score=%d&pid=%d&playerinfo=%s%s"
+// );
+
+// WWFC_DEFINE_PATCH = Patch::WriteString(
+//     WWFC_PATCH_LEVEL_SUPPORT,
+//     RMCXD_PORT(0x8089adb8),
+//     "%s://mariokartwii.sake.gs." WWFC_DOMAIN
+//     "/SakeFileServer/ghostdownload.aspx?gameid=1687&region=0&p0=%d&c0=%d&t0=%d"
+// );
+
+// SakeFileServer upload/download
+
+WWFC_DEFINE_PATCH = Patch::WriteString(
+    WWFC_PATCH_LEVEL_SUPPORT,
+    RMCXD_PORT(0x80279da4, 0x80275a64, 0x80279744, 0x80267b84, DEMOTODO),
+    "https://%s.sake.gs." WWFC_DOMAIN "/SakeFileServer/upload.aspx"
+);
+
+WWFC_DEFINE_PATCH = Patch::WriteString(
+    WWFC_PATCH_LEVEL_SUPPORT,
+    RMCXD_PORT(0x80279de4, 0x80275aa4, 0x80279784, 0x80267bc4, DEMOTODO),
+    "https://%s.sake.gs." WWFC_DOMAIN "/SakeFileServer/download.aspx"
+);
+
+#endif
 
 } // namespace wwfc::Support
