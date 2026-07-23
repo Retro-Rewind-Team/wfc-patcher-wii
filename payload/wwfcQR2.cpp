@@ -2,6 +2,7 @@
 #include "import/qr2.h"
 #include "import/revolution.h"
 #include "wwfcBase.hpp"
+#include "wwfcLibC.hpp"
 #include "wwfcLog.hpp"
 #include "wwfcPatch.hpp"
 
@@ -29,7 +30,7 @@ WWFC_DEFINE_PATCH = Patch::Call( //
         ) AT(RMCXD_PORT(0x80110720, 0x80110680, 0x80110640, 0x80110798, DEMOTODO));
 
         [[gnu::longcall]] char *SOINetNToA(
-            u32 ip
+            u32 *ip
         ) AT(RMCXD_PORT(0x801ed938, 0x801ed898, 0x801ed858, 0x801edd60, DEMOTODO));
 
         if (!qrec || !sender || query[0] == ';' || len < 7)
@@ -57,20 +58,21 @@ WWFC_DEFINE_PATCH = Patch::Call( //
                 int i = 8;
                 u8 j = 0;
 
-                WWFC_LOG_INFO_FMT("QR2: Received kick order! Contains %d players.", playerCount);
+                WWFC_LOG_INFO_FMT("QR2: Received kick order (%d)! Contains %d player(s).", len, playerCount);
 
                 // Repeated sequence of u32 pairs starting at byte 9 (index 8)
-                for (; i + 8 < len && j < playerCount; i += 8, j++) {
+                for (; i + 7 < len && j < playerCount; i += 8, j++) {
                     u32 pid = *(u32*)&query[i];
                     u32 ip = *(u32*)&query[i + 4];
 
-                    WWFC_LOG_INFO_FMT("QR2: Received kick order for PID %d, IP %s : %d", pid, SOINetNToA(ip), ip);
+                    WWFC_LOG_INFO_FMT("QR2: Received kick order for PID %d, IP %s : %d", pid, SOINetNToA(&ip), ip);
 
                     DWC::DWCiNodeInfo* nodes = DWC::stpMatchCnt->nodes;
-                    for (int i = 0; i < 32; i++) {
-                        DWC::DWCiNodeInfo node = nodes[i];
+                    for (int k = 0; k < 32; k++) {
+                        DWC::DWCiNodeInfo node = nodes[k];
+                        char *nodeIpStr = SOINetNToA(&node.ipAddr);
 
-                        WWFC_LOG_INFO_FMT("Testing against PID %d, IP %d", node.profileId, node.ipAddr);
+                        WWFC_LOG_INFO_FMT("QR2: Testing against PID %d, IP %s : %d", node.profileId, nodeIpStr, node.ipAddr);
 
                         // If either matches, then we kick. Otherwise skip iter
                         if (node.ipAddr != ip && node.profileId != pid)
@@ -84,12 +86,12 @@ WWFC_DEFINE_PATCH = Patch::Call( //
                             || pid == DWC::stpMatchCnt->profileID) {
                             DWC::DWCi_HandleGPError(3);
                             DWC::DWCi_SetError(6, -83337);
-                            WWFC_LOG_INFO_FMT("Kick order matched host or yourself: PID %d, IP %d", node.profileId, node.ipAddr);
+                            WWFC_LOG_INFO_FMT("QR2: Kick order matched host or yourself: PID %d, IP %s : %d", node.profileId, nodeIpStr, node.ipAddr);
                             break;
                         }
 
-                        WWFC_LOG_INFO_FMT("Closing connection for PID %d, IP %d", node.profileId, node.ipAddr);
-                        DWC::DWC_CloseConnectionHard(nodes[i].aid);
+                        DWC::DWC_CloseConnectionHard(nodes[k].aid);
+                        WWFC_LOG_INFO_FMT("QR2: Closed connection for PID %d, IP %s : %d", node.profileId, nodeIpStr, node.ipAddr);
                     }
                 }
 
