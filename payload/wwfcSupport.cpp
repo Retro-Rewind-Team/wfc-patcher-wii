@@ -203,55 +203,150 @@ WWFC_DEFINE_PATCH = Patch::Call(
     NHTTPi_FixHostHeader
 );
 
-// SakeStorageServer
+const char* sakeFixURL(const char* src, char* dest)
+{
+    const char* out = FixHostname(src, dest);
 
-WWFC_DEFINE_PATCH = Patch::WriteString(
+    int len = std::strlen(out);
+    if (len >= 0x80) {
+        WWFC_LOG_ERROR_FMT(
+            "Replaced sake URL is too long (%s -> %s:%d)! This may cause "
+            "corruption",
+            src, out, len
+        );
+    }
+
+    return out;
+}
+
+u32 SakeInterceptSetFileUploadURL(char* dest, const char* src)
+{
+    [[gnu::longcall]] u32 sakeSetFileUploadURL( //
+        char *dest, const char *src
+    ) AT(RMCXD_PORT(0x80122328, 0x80122288, 0x80122248, 0x801223a0, DEMOTODO));
+
+    char fixedName[256];
+    const char* out = sakeFixURL(src, fixedName);
+
+    int ret = sakeSetFileUploadURL(dest, out);
+
+    char* set = reinterpret_cast<char*>(
+        RMCXD_PORT(0x802f3fc0, 0x802efc40, 0x802f3940, 0x802e1fc0, DEMOTODO)
+    );
+    WWFC_LOG_INFO_FMT("Set sakeFileUploadURL to %s", set);
+
+    return ret;
+}
+
+u32 SakeInterceptSetFileDownloadURL(char* dest, char* src)
+{
+    [[gnu::longcall]] u32 sakeSetFileDownloadURL( //
+char *dest, const char *src
+) AT(RMCXD_PORT(0x80122218, 0x80122178, 0x80122138, 0x80122290, DEMOTODO));
+
+    char fixedName[256];
+    const char* out = sakeFixURL(src, fixedName);
+
+    int ret = sakeSetFileDownloadURL(dest, out);
+
+    char* set = reinterpret_cast<char*>(
+        RMCXD_PORT(0x802f3f40, 0x802efbc0, 0x802f38c0, 0x802e1f40, DEMOTODO)
+    );
+    WWFC_LOG_INFO_FMT("Set sakeFileDownloadURL to %s", set);
+
+    return ret;
+}
+
+// Intercept SakeFileServer upload/download
+WWFC_DEFINE_PATCH = Patch::Call(
     WWFC_PATCH_LEVEL_SUPPORT,
-    RMCXD_PORT(0x80279d58, 0x80275a18, 0x802796f8, 0x80267b38, DEMOTODO),
-    "http://%s.sake.gs." WWFC_DOMAIN "/SakeStorageServer/StorageServer.asmx"
+    RMCXD_PORT(0x800ea484, 0x800ea3e4, 0x800ea3a4, 0x800ea4fc, DEMOTODO),
+    SakeInterceptSetFileUploadURL
 );
 
-WWFC_DEFINE_PATCH = Patch::WriteString(
+WWFC_DEFINE_PATCH = Patch::Call(
     WWFC_PATCH_LEVEL_SUPPORT,
-    RMCXD_PORT(0x8027e0a0, 0x80279d60, 0x8027da40, 0x8026bf50, DEMOTODO),
-    "http://%s.sake.gs." WWFC_DOMAIN "/SakeStorageServer/StorageServer.asmx"
+    RMCXD_PORT(0x800ea490, 0x800ea3f0, 0x800ea3b0, 0x800ea508, DEMOTODO),
+    SakeInterceptSetFileDownloadURL
 );
 
-// SakeFileServer Ghost upload/download
+[[gnu::longcall]] u32 snprintf( //
+    char *str, int size, const char *format, ...
+) AT(RMCXD_PORT(0x80011938, 0x80010dd8, 0x8001185c, 0x800119a0, DEMOTODO));
 
-WWFC_DEFINE_PATCH = Patch::WriteString(
+u32 SakeInterceptSetStorageServerURL(
+    char* dest, int size, char* format, char* gameName
+)
+{
+    char fixedFormt[256];
+    const char* out = FixHostname(format, fixedFormt);
+
+    WWFC_LOG_INFO_FMT("Set sake StorageServer URL base to %s", out);
+
+    return snprintf(dest, size, out, gameName);
+}
+
+WWFC_DEFINE_PATCH = Patch::Call(
     WWFC_PATCH_LEVEL_SUPPORT,
-    RMCXD_PORT(0x8089a6b8, 0x80895cc0, 0x80899818, 0x80888af0, DEMOTODO),
-    "http://mariokartwii.sake.gs." WWFC_DOMAIN
-    "/SakeFileServer/ghostdownload.aspx?gameid=1687&region=0"
+    RMCXD_PORT(0x800ea40c, 0x800ea36c, 0x800ea32c, 0x800ea46c, DEMOTODO),
+    SakeInterceptSetStorageServerURL
 );
 
-// WWFC_DEFINE_PATCH = Patch::WriteString(
-//     WWFC_PATCH_LEVEL_SUPPORT,
-//     RMCXD_PORT(0x8089ac85),
-//     "%s://mariokartwii.sake.gs." WWFC_DOMAIN
-//     "/SakeFileServer/ghostupload.aspx?gameid=%d&regionid=%d&courseid=%d&score=%d&pid=%d&playerinfo=%s%s"
-// );
+#  define SakeInterceptGhostDownloadURLBody(...)                               \
+      char fixedFormat[256];                                                   \
+      const char* out = FixHostname(format, fixedFormat);                      \
+                                                                               \
+      WWFC_LOG_INFO_FMT("Replace sake GhostDownloadURL base to %s", out);      \
+                                                                               \
+      return snprintf(__VA_ARGS__)
 
-// WWFC_DEFINE_PATCH = Patch::WriteString(
-//     WWFC_PATCH_LEVEL_SUPPORT,
-//     RMCXD_PORT(0x8089adb8),
-//     "%s://mariokartwii.sake.gs." WWFC_DOMAIN
-//     "/SakeFileServer/ghostdownload.aspx?gameid=1687&region=0&p0=%d&c0=%d&t0=%d"
-// );
+u32 SakeInterceptGhostDownloadURL(
+    char* dest, int size, char* format, char* proto, u32 unknown, u32 course,
+    u32 timeMillis
+)
+{
+    SakeInterceptGhostDownloadURLBody(
+        dest, size, out, proto, unknown, course, timeMillis
+    );
+}
 
-// SakeFileServer upload/download
-
-WWFC_DEFINE_PATCH = Patch::WriteString(
+WWFC_DEFINE_PATCH = Patch::Call(
     WWFC_PATCH_LEVEL_SUPPORT,
-    RMCXD_PORT(0x80279da4, 0x80275a64, 0x80279744, 0x80267b84, DEMOTODO),
-    "https://%s.sake.gs." WWFC_DOMAIN "/SakeFileServer/upload.aspx"
+    RMCXD_PORT(0x80677ae0, 0x8067037c, 0x8067714c, 0x80665e88, DEMOTODO),
+    SakeInterceptGhostDownloadURL
 );
 
-WWFC_DEFINE_PATCH = Patch::WriteString(
+u32 SakeInterceptGhostDownloadURL2(char* dest, int size, char* format)
+{
+    SakeInterceptGhostDownloadURLBody(dest, size, out);
+}
+
+WWFC_DEFINE_PATCH = Patch::Call(
     WWFC_PATCH_LEVEL_SUPPORT,
-    RMCXD_PORT(0x80279de4, 0x80275aa4, 0x80279784, 0x80267bc4, DEMOTODO),
-    "https://%s.sake.gs." WWFC_DOMAIN "/SakeFileServer/download.aspx"
+    RMCXD_PORT(0x806758a0, 0x8066e13c, 0x80674f0c, 0x80663c00, DEMOTODO),
+    SakeInterceptGhostDownloadURL2
+);
+
+u32 SakeInterceptGhostUploadURL(
+    char* dest, int size, char* format, char* proto, u32 gameId, u32 regionId,
+    u32 courseId, u32 score, u32 pid, char* playerInfoA, char* playerInfoB
+)
+{
+    char fixedFormt[256];
+    const char* out = FixHostname(format, fixedFormt);
+
+    WWFC_LOG_INFO_FMT("Replace sake GhostUploadURL base to %s", out);
+
+    return snprintf(
+        dest, size, out, proto, gameId, regionId, courseId, score, pid,
+        playerInfoA, playerInfoB
+    );
+}
+
+WWFC_DEFINE_PATCH = Patch::Call(
+    WWFC_PATCH_LEVEL_SUPPORT,
+    RMCXD_PORT(0x80677500, 0x8066fd9c, 0x80676b6c, 0x806658a8, DEMOTODO),
+    SakeInterceptGhostUploadURL
 );
 
 #endif
