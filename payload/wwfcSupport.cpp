@@ -1,4 +1,6 @@
 #include "import/revolution.h"
+#include "wwfcBase.hpp"
+#include "wwfcLibC.hpp"
 #include "wwfcLog.hpp"
 #include "wwfcPatch.hpp"
 #include "wwfcTypes.h"
@@ -170,11 +172,35 @@ WWFC_DEFINE_PATCH = Patch::Write(
     (u32[]) {0x60000000}
 );
 
-// Replace sake endpoints with the correct domain
-// This will break if WWFC_DOMAIN is longer than nintendowifi.net
-static_assert(
-    sizeof(WWFC_DOMAIN) <= sizeof("nintendowifi.net"),
-    "WWFC_DOMAIN is too long!"
+u32 NHTTPi_FixHostHeader(void* request, const char* data, int length)
+{
+    [[gnu::longcall]] u32 NHTTPi_SendData( //
+        void *request, const void *data, int length
+    ) AT(RMCXD_PORT(0x801d6384, 0x801d62e4, 0x801d62a4, 0x801d66e0, DEMOTODO));
+
+    char dataNullTerminated[256];
+    int newLength = std::min(length + 1, 256);
+    std::memcpy(dataNullTerminated, data, newLength - 1);
+    dataNullTerminated[newLength - 1] = '\0';
+
+    WWFC_LOG_INFO_FMT(
+        "NHTTPi_FixHostHeader: Recieved '%s':%d", dataNullTerminated, length
+    );
+
+    char fixedData[256];
+    const char* out = FixHostname(dataNullTerminated, fixedData);
+
+    WWFC_LOG_INFO_FMT("NHTTPi_FixHostHeader: Altered data to '%s'", out);
+
+    return NHTTPi_SendData(request, out, std::strlen(out));
+}
+
+// Replace NHTTPi_ThreadSendProc's Host header with the correct domain
+// Intercepts its call to NHTTPi_SendData to swap out its hostname
+WWFC_DEFINE_PATCH = Patch::Call(
+    WWFC_PATCH_LEVEL_SUPPORT,
+    RMCXD_PORT(0x801d7a34, 0x801d7994, 0x801d7954, 0x801d7d90, DEMOTODO),
+    NHTTPi_FixHostHeader
 );
 
 // SakeStorageServer
